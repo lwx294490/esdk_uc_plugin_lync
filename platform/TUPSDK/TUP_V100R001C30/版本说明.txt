@@ -1,0 +1,4 @@
+版本号：TUP V100R001C30B026
+
+IM和Call的VMP路径：\\hghnas01b-rd\IT_VMP_HZ_16_F\PB21472106_TUP V100R001C30B026\Software\eSpace Desktop V2R3C00
+数据会议的路径：\\hghnas01b-rd\IT_VMP_HZ_16_F\PB21472106_TUP V100R001C30B026\Software\MeetingComponent

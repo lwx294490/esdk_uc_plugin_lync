@@ -1,0 +1,178 @@
+﻿<Window x:Class="LyncWpfApp.WinAllContact"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{DynamicResource SelectContact}" Height="496" Width="647" Topmost ="False" ResizeMode="NoResize" Background="#e6e9ef" WindowStartupLocation="CenterScreen"  Icon="/Image/lync.ico">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="10*"></RowDefinition>
+            <RowDefinition Height="40*"></RowDefinition>
+            <RowDefinition  Height="10*"></RowDefinition>
+            <RowDefinition  Height="30*"></RowDefinition>
+            <RowDefinition  Height="10*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <TextBox Height="30" HorizontalAlignment="Center"  Name="txtInput" VerticalAlignment="Center" Width="521"  VerticalContentAlignment="Center" Margin="1,8,103,8" />
+
+        <Grid Grid.Row="1" Height="182">
+                    <DataGrid AutoGenerateColumns="False"   MouseDoubleClick="tabControl1_MouseDoubleClick"
+                    
+                    Height="183" HorizontalAlignment="Left"   Name="listContact" DataContext="{Binding}" ItemsSource="{Binding}" VerticalAlignment="Top" Width="594" VerticalContentAlignment="Stretch"  HorizontalScrollBarVisibility="Visible" CanUserResizeRows="False" CanUserAddRows="False"  CanUserSortColumns="False" CanUserReorderColumns="False" SelectionMode="Single" AlternationCount="2" GridLinesVisibility="None" Margin="8,0,0,0" HorizontalContentAlignment="Stretch">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="{DynamicResource Name}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="200" Width="200"  >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
+                                            <Label  Content="{Binding Name, Mode=TwoWay , UpdateSourceTrigger=PropertyChanged}"   HorizontalContentAlignment="Left" VerticalContentAlignment="Center"  ></Label>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                   
+                    <DataGridTemplateColumn Header="{DynamicResource Url}"   CanUserResize="False" CanUserSort="False"  IsReadOnly="True"  MinWidth="214" Width="214"  >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
+                                            <Label  Content="{Binding Url, Mode=TwoWay , UpdateSourceTrigger=PropertyChanged}"     HorizontalContentAlignment="Left" VerticalContentAlignment="Center"  ></Label>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="{DynamicResource Phone}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="180" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
+                                            <Label  Content="{Binding Phone, Mode=TwoWay , UpdateSourceTrigger=PropertyChanged}"    HorizontalContentAlignment="Left" VerticalContentAlignment="Center"  ></Label>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                         
+                        </DataGrid.Columns>
+                        <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <!--<Setter Property="Background" Value="LightBlue" />-->
+                                    <!--设置每行的颜色为蓝色-->
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <!--设置鼠标移至行上方-->
+                                        <Setter Property="Background" Value="#3399ff"/>
+                                            <!--设置行背景颜色会变为黄色-->
+                                            <Setter Property="Foreground" Value="Red"/>
+                                            <!--设置行文字颜色变为红色-->
+                                        </Trigger>
+
+                                    <Trigger Property="AlternationIndex" Value="0" >
+                                        <Setter Property="Background" Value="#ffffff" />
+                                    </Trigger>
+                                    <Trigger Property="AlternationIndex" Value="1" >
+                                        <Setter Property="Background" Value="#f0f0f0" />
+                                    </Trigger>
+
+                                </Style.Triggers>
+                                </Style>
+
+                        </DataGrid.RowStyle>
+                    </DataGrid>
+        </Grid>
+        <Label Content="{DynamicResource EnterName}" Grid.Row="3" Height="28" HorizontalAlignment="Left" Margin="20,0,0,109" Name="label1" VerticalAlignment="Center" FlowDirection="RightToLeft" Width="80" Visibility="Hidden" />
+        <TextBox Grid.Row="3" Height="23" HorizontalAlignment="Left" Margin="106,0,0,114" Name="txtName" VerticalAlignment="Center" Width="120" Visibility="Hidden" />
+        <Label Content="{DynamicResource EnterNumber}" Grid.Row="2" Height="28" HorizontalAlignment="Left" Margin="4,13,0,9" Name="label2" VerticalAlignment="Center"  FlowDirection="RightToLeft" Width="66" />
+        <TextBox Grid.Row="2" Height="23" HorizontalAlignment="Left" Margin="83,13,0,9" Name="txtNumber" VerticalAlignment="Center" Width="109" KeyDown="txtNumber_KeyDown" TextChanged="txtNumber_TextChanged" VerticalContentAlignment="Center" />
+        <Button Content="{DynamicResource Add}" Grid.Row="2" Height="23" HorizontalAlignment="Left" Margin="202,13,0,0" Name="btnAdd" VerticalAlignment="Top" Width="75" Click="btnAdd_Click" />
+        <Button Content="{DynamicResource Delete}" Grid.Row="2" Height="23" HorizontalAlignment="Left" Margin="286,13,0,0" Name="btnDelete" VerticalAlignment="Top" Width="75" Click="btnDelete_Click" />
+
+        <DataGrid AutoGenerateColumns="False" Height="137"   
+                     
+                    HorizontalAlignment="Left"   Name="listSelectedContact" DataContext="{Binding}" Grid.Row="3"  ItemsSource="{Binding}" VerticalAlignment="Top" Width="594" VerticalContentAlignment="Stretch"  HorizontalScrollBarVisibility="Visible" CanUserResizeRows="False" CanUserAddRows="False"  CanUserSortColumns="False" CanUserReorderColumns="False" SelectionMode="Single" Margin="8,0,0,0" AlternationCount="2" GridLinesVisibility="None">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="{DynamicResource Name}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="200" Width="200"  >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
+                                <Label  Content="{Binding Name, Mode=TwoWay , UpdateSourceTrigger=PropertyChanged}"   HorizontalContentAlignment="Left" VerticalContentAlignment="Center"  ></Label>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+               
+                <DataGridTemplateColumn Header="{DynamicResource Url}"   CanUserResize="False" CanUserSort="False"  IsReadOnly="True" MinWidth="214" Width="214"  >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
+                                <Label  Content="{Binding Url, Mode=TwoWay , UpdateSourceTrigger=PropertyChanged}"  HorizontalContentAlignment="Left" VerticalContentAlignment="Center"  ></Label>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{DynamicResource Phone}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="180" Width="180">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
+                                <Label  Content="{Binding Phone, Mode=TwoWay , UpdateSourceTrigger=PropertyChanged}"   HorizontalContentAlignment="Left" VerticalContentAlignment="Center"  ></Label>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+            </DataGrid.Columns>
+               <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <!--<Setter Property="Background" Value="LightBlue" />-->
+                    <!--设置每行的颜色为蓝色-->
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <!--设置鼠标移至行上方-->
+                            <Setter Property="Background" Value="#3399ff"/>
+                            <!--设置行背景颜色会变为黄色-->
+                            <Setter Property="Foreground" Value="Red"/>
+                            <!--设置行文字颜色变为红色-->
+                        </Trigger>
+
+                        <Trigger Property="AlternationIndex" Value="0" >
+                            <Setter Property="Background" Value="#ffffff" />
+                        </Trigger>
+                        <Trigger Property="AlternationIndex" Value="1" >
+                            <Setter Property="Background" Value="#f0f0f0" />
+                        </Trigger>
+
+                    </Style.Triggers>
+                </Style>
+
+            </DataGrid.RowStyle>
+        </DataGrid>
+        <Button Content="{DynamicResource OK}" Grid.Row="4" Height="23" HorizontalAlignment="Left" Margin="447,10,0,0" Name="btnOK" VerticalAlignment="Top" Width="75" Click="btnOK_Click"></Button>
+        <Button Content="{DynamicResource Cancel}" Grid.Row="4" Height="23" HorizontalAlignment="Left" Margin="528,10,0,0" Name="btnCancle" VerticalAlignment="Top" Width="75" Click="btnCancle_Click"></Button>
+        <Button Content="{DynamicResource Query}" Height="23" HorizontalAlignment="Left" Margin="534,11,0,0" Name="btnQuery" VerticalAlignment="Top" Width="68" Click="btnQuery_Click"></Button>
+        <TextBox Height="23" HorizontalAlignment="Left" Margin="436,13,0,0" Name="txtPage" ToolTip="{DynamicResource LastPage}" VerticalAlignment="Top" Width="22" Grid.Row="2" />
+        <Label Content="/" Height="28" HorizontalAlignment="Right" Margin="0,10,120,0" Name="labTotal" VerticalAlignment="Top" Width="46" Grid.Row="2" />
+        <Button Height="23" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="374,13,0,9" ToolTip="{DynamicResource FristPage}" VerticalContentAlignment="Center" Width="22" Grid.Row="2"  Click="imgFrist_MouseLeftButtonUp">
+            <Button.Content>
+                <Image Source="/Image/history/page-first-select.gif" Width="16" Height="16" Grid.Row="1" Name="imgFrist"  ></Image>
+            </Button.Content>
+        </Button>
+        <!--<Image Height="16" Name="image1" Source="/Image/history/page-first-select.gif" Width="16" Margin="377,16,0,13" Grid.Row="2" HorizontalAlignment="Left" />-->
+        <Button Height="23" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="406,13,0,9" ToolTip="{DynamicResource PreviousPage}" VerticalContentAlignment="Center" Width="22" Grid.Row="2" Click="imgPrev_MouseLeftButtonUp">
+            <Button.Content>
+                <Image Source="/Image/history/page-prev.gif" Width="16" Height="16" Grid.Row="1"  Name ="imgPrev" ></Image>
+            </Button.Content>
+        </Button>
+        <!--<Image Height="16" Name="image2" Source="/Image/history/page-prev.gif" Width="16" Margin="403,16,206,13" Grid.Row="2" />-->
+        <Button Height="23" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="500,13,0,9" ToolTip="{DynamicResource GO}" VerticalContentAlignment="Center" Width="22" Grid.Row="2"   Click="imgGo_MouseLeftButtonUp">
+            <Button.Content>
+                <Image Source="/Image/history/refresh.gif" Width="16" Height="16" Grid.Row="1" Name ="imgGo" IsHitTestVisible="True"></Image>
+            </Button.Content>
+        </Button>
+        <!--<Image Height="16" IsHitTestVisible="True" Name="image3" Source="/Image/history/refresh.gif" Width="16" Margin="497,16,112,13" Grid.Row="2" />-->
+        <Button Height="23" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="536,13,0,9" ToolTip="{DynamicResource NextPage}" VerticalContentAlignment="Center" Width="22" Grid.Row="2" Click="imgNext_MouseLeftButtonUp">
+            <Button.Content>
+                <Image Source="/Image/history/page-next.gif" Width="16" Height="16" Grid.Row="1"  Name ="imgNext" ></Image>
+            </Button.Content>
+        </Button>
+        <!--<Image Height="16" Name="imgNext" Source="/Image/history/page-next.gif" Width="16" Margin="533,16,76,13" Grid.Row="2" />-->
+        <Button Height="23" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="573,13,0,9" Name="BtnLast" VerticalContentAlignment="Center" Width="22" Grid.Row="2"  Click="imgLast_MouseLeftButtonUp">
+            <Button.Content>
+                <Image Source="/Image/history/page-last-select.gif" Width="16" Height="16" Grid.Row="1" Name ="imgLast" ></Image>
+            </Button.Content>
+        </Button>
+        <!--<Image Height="16" Name="imgLast" Source="/Image/history/page-last-select.gif" Width="16" Margin="571,16,38,13" Grid.Row="2" />-->
+    </Grid>
+</Window>
