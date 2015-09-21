@@ -36,6 +36,7 @@ public:
 
 	void NotifyAllMember(const std::string& strGroupID);
 	Group* GetGroupByID(const std::string& strGroupID);
+	void AddGroupINGrouplist(std::string m_Groupid, Group* m_Group) {m_mapGroupList[m_Groupid] = m_Group ;};
 private:
 	UCGroupMgr(void);
 	~UCGroupMgr(void);

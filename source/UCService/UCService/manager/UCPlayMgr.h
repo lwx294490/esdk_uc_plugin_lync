@@ -14,6 +14,8 @@ public:
 	int EndPlayIncoming(void) ;
 	int StartPlayRingBack(void);//≤•∑≈ªÿ¡Â“Ù
 	int EndPlayRingBack(void) ;
+	int StartPlayHoldCall(void) ;//////∫ÙΩ–±£≥÷“Ù¿÷
+	int EndPlayHoldCall(void) ;
 private:
 	UCPlayMgr(void);
 	~UCPlayMgr(void);
@@ -21,6 +23,7 @@ private:
 	std::string m_curPath;
 	TUP_INT32 m_tupIncomingHandle;
 	TUP_INT32 m_tupRingBackHandle;
+	TUP_INT32 m_tupHoldCallHandle;
 };
 #endif
 

@@ -1010,8 +1010,8 @@ extern "C"
 	 *
 	 *@param[in]	_account		账户
 	 *@param[in]	_FilePath		文件路径
-	 *@param[out]	_ConvID			文件传输会话标识
-	 *@param[out]	_TranID			文件传输唯一标识
+	 *@param[out]	_ConvID			文件传输会话标识（保留参数，不启用）
+	 *@param[out]	_TranID			文件传输唯一标识（保留参数，不启用）
 	 *@return		0	成功
 	 *@return		非0	失败（参考错误返回码）
 	 *@attention	无
@@ -1024,43 +1024,44 @@ extern "C"
 	 * 
 	 *该函数用于
 	 *
-	 *@param[in]	_ConvID				文件传输会话标识
-	 *@param[in]	_TranID				文件传输标记
-	 *@param[in]	_FileSavePath		保存文件的路径	 
+	 *@param[in]	_account	     	接收方账号
+	 *@param[in]	_FileSavePath		发送文件的路径
+	 *@param[in]	_ConvID				文件传输会话标识（保留参数，不启用）
+	 *@param[in]	_TranID				文件传输标记（保留参数，不启用）	 
 	 *@return		0	成功
 	 *@return		非0	失败（参考错误返回码）
 	 *@attention	无
 	 *@par			无
 	**/
-	ESDK_UCSERVICE_API int __UC_SDK_CALL UC_SDK_AcceptFile(const char* _ConvID,const char* _TranID,const char* _FileSavePath);
+	ESDK_UCSERVICE_API int __UC_SDK_CALL UC_SDK_AcceptFile(const char* _account,const char* _TranID,const char* _FileSavePath);
 
 	/**
 	 *取消文件传输
 	 * 
 	 *该函数用于取消文件传输
 	 *
-	 *@param[in]	_ConvID				文件传输会话标识
-	 *@param[in]	_TranID				文件传输唯一标识
+	 *@param[in]	_account			对方账号
+	 *@param[in]	_filepath		    本地文件路径
 	 *@return		0	成功
 	 *@return		非0	失败（参考错误返回码）
 	 *@attention	无
 	 *@par			无
 	**/
-	ESDK_UCSERVICE_API int __UC_SDK_CALL UC_SDK_CancelFile(const char* _ConvID,const char* _TranID);
+	ESDK_UCSERVICE_API int __UC_SDK_CALL UC_SDK_CancelFile(const char* _account,const char* _filepath);
 
 	/**
 	 *拒绝文件传输
 	 * 
 	 *该函数用于拒绝文件传输
 	 *
-	 *@param[in]	_ConvID				文件传输会话标识
-	 *@param[in]	_TranID				文件传输唯一标识
+	 *@param[in]	_account			对方账号
+	 *@param[in]	_filepath		    本地文件路径
 	 *@return		0	成功
 	 *@return		非0	失败（参考错误返回码）
 	 *@attention	无
 	 *@par			无
 	**/
-	ESDK_UCSERVICE_API int __UC_SDK_CALL UC_SDK_RejectFile(const char* _ConvID,const char* _TranID);
+	ESDK_UCSERVICE_API int __UC_SDK_CALL UC_SDK_RejectFile(const char* _account,const char* _filepath);
 
 	/**
 	 *设置文件接收事件回调
@@ -1087,6 +1088,17 @@ extern "C"
 	 *@par			无
 	**/
 	ESDK_UCSERVICE_API int __UC_SDK_CALL UC_SDK_SetCallTransEventCallBack(CallTransEventCB CallTransCallBack);
+	/**
+	 *语音会议转数据会议
+	 * 
+	 *该函数用于将已建立的语音会议转成数据会议
+	 *
+	 *@return		0	成功
+	 *@return		非0	失败（参考错误返回码）
+	 *@attention	登陆后立即调用
+	 *@par			无
+	**/
+    ESDK_UCSERVICE_API int __UC_SDK_CALL UC_SDK_TransCallToMultiMediaConf(void);
 
 
 

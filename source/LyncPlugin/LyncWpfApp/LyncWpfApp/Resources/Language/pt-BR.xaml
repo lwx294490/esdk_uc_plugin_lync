@@ -1,206 +1,220 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 xmlns:sys="clr-namespace:System;assembly=mscorlib">
-    <sys:String x:Key="UCCallMessage">UC MakeCall Help Message.</sys:String>
-    <sys:String x:Key="UCCallMenuItem">UC MakeCall</sys:String>
-    <sys:String x:Key="UCVideoCallMessage">UC VideoCall Help Message.</sys:String>
-    <sys:String x:Key="UCVideoCallMenuItem">UC VideoCall</sys:String>
+    <sys:String x:Key="UCCallMessage">Fazer Chamada UC Mensagem de Ajuda.</sys:String>
+    <sys:String x:Key="UCCallMenuItem">Fazer Chamada UC</sys:String>
+    <sys:String x:Key="UCVideoCallMessage">Video Chamada UC Mensagem de Ajuda.</sys:String>
+    <sys:String x:Key="UCVideoCallMenuItem">Video Chamada UC</sys:String>
     <sys:String x:Key="LoginUC">Login UC</sys:String>
     <sys:String x:Key="LoginUCMessage">Login UC</sys:String>
     <sys:String x:Key="LogOutUC">Logout UC</sys:String>
     <sys:String x:Key="LogOutUCMessage">Logout UC</sys:String>
 
-    <sys:String x:Key="PhoneNumber">:Enter Phone Number</sys:String>
+    <sys:String x:Key="PhoneNumber">:Digite o Número de Telefone</sys:String>
     <sys:String x:Key="OK">OK</sys:String>
-    <sys:String x:Key="Cancel">Cancel</sys:String>
-    <sys:String x:Key="Contacts">Contacts</sys:String>
-    <sys:String x:Key="Name">Name</sys:String>
-    <sys:String x:Key="Url">URI</sys:String>
+    <sys:String x:Key="Cancel">Cancelar</sys:String>
+    <sys:String x:Key="Contacts">Contatos</sys:String>
+    <sys:String x:Key="Name">Nome</sys:String>
+    <sys:String x:Key="Url">URL</sys:String>
 
-    <sys:String x:Key="Phone">Phone</sys:String>
-    <sys:String x:Key="EnterName">:Enter Name</sys:String>
-    <sys:String x:Key="EnterNumber">:Enter Number</sys:String>
+    <sys:String x:Key="Phone">Telefone</sys:String>
+    <sys:String x:Key="EnterName">:Digite o Nome</sys:String>
+    <sys:String x:Key="EnterNumber">:Number</sys:String>
     <sys:String x:Key="Add">Add</sys:String>
-    <sys:String x:Key="Delete">Delete</sys:String>
+    <sys:String x:Key="Delete">Deletar</sys:String>
 
-    <sys:String x:Key="Answer">Answer</sys:String>
-    <sys:String x:Key="Decline">Decline</sys:String>
-    <sys:String x:Key="CallHistory">Call History</sys:String>
-    <sys:String x:Key="ConferenceHistory">Conference History</sys:String>
-    <sys:String x:Key="Missed">Missed</sys:String>
+    <sys:String x:Key="Answer">Atender</sys:String>
+    <sys:String x:Key="Decline">Recusar</sys:String>
+    <sys:String x:Key="CallHistory">Histórico de chamadas</sys:String>
+    <sys:String x:Key="ConferenceHistory">Histórico de Conferência</sys:String>
+    <sys:String x:Key="Missed">Perdida</sys:String>
 
-    <sys:String x:Key="Answered">Answered</sys:String>
-    <sys:String x:Key="Dialed">Dialed</sys:String>
-    <sys:String x:Key="All">All</sys:String>
-    <sys:String x:Key="Time">Time</sys:String>
-    <sys:String x:Key="Duration">Duration</sys:String>
+    <sys:String x:Key="Answered">Atendida</sys:String>
+    <sys:String x:Key="Dialed">Discada</sys:String>
+    <sys:String x:Key="All">Todas</sys:String>
+    <sys:String x:Key="Time">Hora</sys:String>
+    <sys:String x:Key="Duration">Duração</sys:String>
 
-    <sys:String x:Key="ConferenceInitiator">Conference Initiator</sys:String>
-    <sys:String x:Key="ConferenceStartTime">Conference Start Time</sys:String>
-    <sys:String x:Key="Participants">Participants</sys:String>
-    <sys:String x:Key="Refresh">Refresh</sys:String>
-    <sys:String x:Key="Clear">Clear</sys:String>
+    <sys:String x:Key="ConferenceInitiator">Moderador da Conferência</sys:String>
+    <sys:String x:Key="ConferenceStartTime">Início da Conferência</sys:String>
+    <sys:String x:Key="Participants">Participantes</sys:String>
+    <sys:String x:Key="Refresh">Atualizar</sys:String>
+    <sys:String x:Key="Clear">Limpar</sys:String>
 
-    <sys:String x:Key="General">General</sys:String>
-    <sys:String x:Key="Call">Call</sys:String>
+    <sys:String x:Key="General">Geral</sys:String>
+    <sys:String x:Key="Call">Chamada</sys:String>
     <sys:String x:Key="Audio">Audio</sys:String>
-    <sys:String x:Key="Video">Video</sys:String>
-    <sys:String x:Key="Camera">:Camera</sys:String>
+    <sys:String x:Key="Video">Vídeo</sys:String>
+    <sys:String x:Key="Camera">:Câmera</sys:String>
 
 
-    <sys:String x:Key="Apply">Apply</sys:String>
-    <sys:String x:Key="UCAccount">:UC Account</sys:String>
-    <sys:String x:Key="UCPassword">:UC Password</sys:String>
-    <sys:String x:Key="Port">:Port</sys:String>
-    <sys:String x:Key="Language">:Language</sys:String>
+    <sys:String x:Key="Apply">Aplicar</sys:String>
+    <sys:String x:Key="UCAccount">:Conta UC</sys:String>
+    <sys:String x:Key="UCPassword">:Senha UC</sys:String>
+    <sys:String x:Key="Port">:Porta</sys:String>
+    <sys:String x:Key="Language">:Idioma</sys:String>
 
     <sys:String x:Key="Chinese">简体中文</sys:String>
     <sys:String x:Key="English">English</sys:String>
-    <sys:String x:Key="ReStart">Start UC for Microsoft Lync when my computer start</sys:String>
-    <sys:String x:Key="Microphone">:Microphone</sys:String>
-    <sys:String x:Key="Speaker">:Speaker</sys:String>
+    <sys:String x:Key="BR">Portuguese</sys:String>
+    <sys:String x:Key="ReStart">Iniciar UC para o Microsoft Lync quando o meu computador iniciar</sys:String>
+    <sys:String x:Key="Microphone">:Microfone</sys:String>
+    <sys:String x:Key="Speaker">:Auto-falante</sys:String>
 
-    <sys:String x:Key="RingToneSettings">Ring Tone Settings</sys:String>
+    <sys:String x:Key="RingToneSettings">Ajustes de Ring Tone</sys:String>
     <sys:String x:Key="RingTone">Ring Tone</sys:String>
     <sys:String x:Key="Play">Play</sys:String>
-    <sys:String x:Key="Enable">Enable</sys:String>
-    <sys:String x:Key="File">:File</sys:String>
-    <sys:String x:Key="Server">:Server</sys:String>
+    <sys:String x:Key="Enable">Habilitar</sys:String>
+    <sys:String x:Key="File">:Arquivo</sys:String>
+    <sys:String x:Key="Server">:Servidor</sys:String>
 
 
-    <sys:String x:Key="Hisitory">History</sys:String>
-    <sys:String x:Key="Setting">Setting</sys:String>
-    <sys:String x:Key="Keypad">Keypad</sys:String>
-    <sys:String x:Key="ClientInvalid">Client Invalid</sys:String>
-    <sys:String x:Key="SomewhereElse">Your Account has logged in Somewhere else</sys:String>
-    <sys:String x:Key="SignedUCFailed">Signed UC Failed</sys:String>
-    <sys:String x:Key="SignedInUC">Signed In UC</sys:String>
+    <sys:String x:Key="Hisitory">Histórico</sys:String>
+    <sys:String x:Key="Setting">Ajustes</sys:String>
+    <sys:String x:Key="Keypad">Teclado</sys:String>
+    <sys:String x:Key="ClientInvalid">Cliente Inválido</sys:String>
+    <sys:String x:Key="SomewhereElse">Sua conta foi registrada em algum outro local</sys:String>
+    <sys:String x:Key="SignedUCFailed">Falha no Registro UC</sys:String>
+    <sys:String x:Key="SignedInUC">Registrado em UC</sys:String>
 
-    <sys:String x:Key="NoLyncFound">No Lync Found</sys:String>
-    <sys:String x:Key="Incomingcall">Incoming call</sys:String>
-    <sys:String x:Key="AddNumber">Add Number</sys:String>
-    <sys:String x:Key="SelectContact">Select Contact</sys:String>
-    <sys:String x:Key="HoldResume">Hold/Resume Call</sys:String>
-    <sys:String x:Key="TwoStageDialing">Two-Stage Dialing</sys:String>
-    <sys:String x:Key="MuteUnmuteMicrophone">Mute/Unmute Microphone</sys:String>
+    <sys:String x:Key="NoLyncFound">Nenhum Lync Encontrado</sys:String>
+    <sys:String x:Key="Incomingcall">Chamada Recebida</sys:String>
+    <sys:String x:Key="AddNumber">Adicionar Número</sys:String>
+    <sys:String x:Key="SelectContact">Selecionar Contato</sys:String>
+    <sys:String x:Key="HoldResume">Reter/Liberar chamada</sys:String>
+    <sys:String x:Key="TwoStageDialing">Discagem de Dois Estágios</sys:String>
+    <sys:String x:Key="MuteUnmuteMicrophone">Mute/Unmute Microfone</sys:String>
 
-    <sys:String x:Key="MuteUnmuteSpeaker">Mute/Unmute Speaker</sys:String>
-    <sys:String x:Key="EndCall">End Call</sys:String>
-    <sys:String x:Key="InviteParticipant">Invite Participant</sys:String>
-    <sys:String x:Key="FristPage">Frist Page</sys:String>
-    <sys:String x:Key="PreviousPage">Previous Page</sys:String>
-    <sys:String x:Key="GO">GO</sys:String>
-    <sys:String x:Key="NextPage">NextPage</sys:String>
-    <sys:String x:Key="LastPage">LastPage</sys:String>
+    <sys:String x:Key="MuteUnmuteSpeaker">Mute/Unmute Auto-falante</sys:String>
+    <sys:String x:Key="EndCall">Encerrar Chamada</sys:String>
+    <sys:String x:Key="InviteParticipant">Convidar Participante</sys:String>
+    <sys:String x:Key="FristPage">Primeira Página</sys:String>
+    <sys:String x:Key="PreviousPage">Página Anterior</sys:String>
+    <sys:String x:Key="GO">Ir</sys:String>
+    <sys:String x:Key="NextPage">Próxima Página</sys:String>
+    <sys:String x:Key="LastPage">Última Página</sys:String>
 
     <sys:String x:Key="MuteUnmute">Mute/Unmute</sys:String>
-    <sys:String x:Key="Remove">Remove</sys:String>
-    <sys:String x:Key="HangUp">Hang Up</sys:String>
-    <sys:String x:Key="ReInvite">Re-Call</sys:String>
-    <sys:String x:Key="TempGroup">'s Temp Group</sys:String>
+    <sys:String x:Key="Remove">Remover</sys:String>
+    <sys:String x:Key="HangUp">Desligar</sys:String>
+    <sys:String x:Key="ReInvite">rechamar</sys:String>
+    <sys:String x:Key="TempGroup">'s Grupo Temporário</sys:String>
 
-    <sys:String x:Key="NoUCAccount">No UC Account.Please configure UC first</sys:String>
-    <sys:String x:Key="SettingUC">Setting UC</sys:String>
-    <sys:String x:Key="Options">Options</sys:String>
-    <sys:String x:Key="NoMultiplePersonVideo">Not Support Multiple Persons Video</sys:String>
+    <sys:String x:Key="NoUCAccount">Sem conta UC. Por favor configurar UC primeiro</sys:String>
+    <sys:String x:Key="SettingUC">Ajustes UC</sys:String>
+    <sys:String x:Key="Options">Opções</sys:String>
+    <sys:String x:Key="NoMultiplePersonVideo">Não suporta Multiplas pessoas no Vídeo</sys:String>
 
-    <sys:String x:Key="AvailableCondition">Available</sys:String>
-    <sys:String x:Key="UnavailableCondition">Unavailable</sys:String>
-    <sys:String x:Key="BusyCondition">Busy</sys:String>
+    <sys:String x:Key="AvailableCondition">Disponível</sys:String>
+    <sys:String x:Key="UnavailableCondition">Indisponível</sys:String>
+    <sys:String x:Key="BusyCondition">Ocupado</sys:String>
     <sys:String x:Key="VoicemailCondition">Voicemail</sys:String>
-    <sys:String x:Key="ForwardCondition">Forward Condition</sys:String>
-    <sys:String x:Key="CallNumber">Call Number</sys:String>
-    <sys:String x:Key="eSpaceTerminal">PC as the primary</sys:String>
-    <sys:String x:Key="IPPhone">Phone as the primary</sys:String>
-    <sys:String x:Key="Finish">Finish</sys:String>
-    <sys:String x:Key="transfernNumber">Transfer To New Number</sys:String>
-    <sys:String x:Key="TwoCallsSameTime">you cannot have two calls at the same time</sys:String>
+    <sys:String x:Key="ForwardCondition">Condição de Encaminhamento</sys:String>
+    <sys:String x:Key="CallNumber">Chamar Número</sys:String>
+    <sys:String x:Key="eSpaceTerminal">PC como o primário</sys:String>
+    <sys:String x:Key="IPPhone">Telefone como o primário</sys:String>
+    <sys:String x:Key="Finish">Terminar</sys:String>
+    <sys:String x:Key="transfernNumber">Transferir para novo número</sys:String>
+    <sys:String x:Key="TwoCallsSameTime">Você não pode ter duas chamadas simultâneas</sys:String>
 
-    <sys:String x:Key="SelfMgr_Portal">Self Manager Paltform</sys:String>
-    <sys:String x:Key="BookConf_Portal">Book Conference</sys:String>
-    <sys:String x:Key="NoLogin">Please Login UC</sys:String>
-    <sys:String x:Key="ConfigPhoneJointDevFail">Failed to link the IP phone.</sys:String>
+    <sys:String x:Key="SelfMgr_Portal">Plataforma de auto gerência</sys:String>
+    <sys:String x:Key="BookConf_Portal">Agendar conferência</sys:String>
+    <sys:String x:Key="NoLogin">Por favor, Login UC</sys:String>
+    <sys:String x:Key="ConfigPhoneJointDevFail">Falha ao conectar o Telefone IP</sys:String>
 
-    <sys:String x:Key="AccountOrPwdError">Account Or Password Error</sys:String>
-    <sys:String x:Key="AccountLocked">Account Is Locked</sys:String>
-    <sys:String x:Key="NeedChangePwd">Need To Change Password</sys:String>
+    <sys:String x:Key="AccountOrPwdError">Erro de conta ou password</sys:String>
+    <sys:String x:Key="AccountLocked">Conta bloqueada</sys:String>
+    <sys:String x:Key="NeedChangePwd">Necessário mudar a senha</sys:String>
 
     <sys:String x:Key="Timeout">Timeout</sys:String>
-    <sys:String x:Key="NeedNewVersion">Need New Version</sys:String>
-    <sys:String x:Key="NeedActive">Need Active Account</sys:String>
+    <sys:String x:Key="NeedNewVersion">Precisa de nova versão</sys:String>
+    <sys:String x:Key="NeedActive">Precisa ativar a conta</sys:String>
 
-    <sys:String x:Key="NormalError">Normal Error</sys:String>
-    <sys:String x:Key="logouting">Logging out,please try again later</sys:String>
-    <sys:String x:Key="error">Error</sys:String>
+    <sys:String x:Key="NormalError">Erro normal</sys:String>
+    <sys:String x:Key="logouting">Deslogando, por favor tente novamente mais tarde</sys:String>
+    <sys:String x:Key="error">Erro</sys:String>
 
 
-    <sys:String x:Key="StatusStartSucess">Linked to the IP phone successfully.</sys:String>
-    <sys:String x:Key="StatusStartFailed">Failed to link the IP phone.</sys:String>
-    <sys:String x:Key="StatusStopSucess">IP phone linkage canceled.</sys:String>
-    <sys:String x:Key="StatusStopFailed">Failed to cancel IP phone linkage.</sys:String>
-    <sys:String x:Key="NoSupportVideo">In The Phone State, Not Support Video Call.</sys:String>
+    <sys:String x:Key="StatusStartSucess">Conectado ao telefone IP com êxito.</sys:String>
+    <sys:String x:Key="StatusStartFailed">Falha ao conectar o telefone IP.</sys:String>
+    <sys:String x:Key="StatusStopSucess">Conexão ao telefone IP cancelada.</sys:String>
+    <sys:String x:Key="StatusStopFailed">Falha ao cancelar a conexão com o telefone IP</sys:String>
+    <sys:String x:Key="NoSupportVideo">Não suporta video chamada.</sys:String>
 
-    <sys:String x:Key="Disable">Disable</sys:String>
-    <sys:String x:Key="CallForwardType">Call Forward Type</sys:String>
-    <sys:String x:Key="CallForwardUnCond">Call Forward On Available</sys:String>
-    <sys:String x:Key="CallForwardNoReply">Call Forward On NoReply</sys:String>
-    <sys:String x:Key="CallForwardBusy">Call Forward On Busy</sys:String>
-    <sys:String x:Key="CallForwardOffline">Call Forward On Unavailable</sys:String>
-    <sys:String x:Key="NoMoblePhone">No Mobile Phone</sys:String>
-    <sys:String x:Key="CallForwardOnDND">Call Forward On DND</sys:String>
+    <sys:String x:Key="Disable">Desabilitar</sys:String>
+    <sys:String x:Key="CallForwardType">Tipo de encaminhamento de chamada</sys:String>
+    <sys:String x:Key="CallForwardUnCond">Desvio de chamada incondicional</sys:String>
+    <sys:String x:Key="CallForwardNoReply">Desvio de chamada quando não responde</sys:String>
+    <sys:String x:Key="CallForwardBusy">Desvio de chamada quando ocupado</sys:String>
+    <sys:String x:Key="CallForwardOffline">Desvio de chamada quadno deslogado</sys:String>
+    <sys:String x:Key="NoMoblePhone">Sem telefone móvel</sys:String>
+    <sys:String x:Key="CallForwardOnDND">Desvio de chamada quando não perturbe </sys:String>
+  
 
-    <sys:String x:Key="NoMoblePhone">No Mobile Phone</sys:String>
+    <sys:String x:Key="FWDSuccess">Sucesso no desvio de chamada</sys:String>
+    <sys:String x:Key="FWDFailed">Falha no desvio de chamada</sys:String>
 
-    <sys:String x:Key="FWDSuccess">Call Forwarding Success</sys:String>
-    <sys:String x:Key="FWDFailed">Call Forwarding  Failed</sys:String>
+    <sys:String x:Key="CancelFWDSuccess">Sucesso no cancelamento do desvio de chamada</sys:String>
+    <sys:String x:Key="CancelFWDFailed">Falha no cancelamento do desvio de chamada</sys:String>
 
-    <sys:String x:Key="CancelFWDSuccess">Cancel Call Forwarding Success</sys:String>
-    <sys:String x:Key="CancelFWDFailed">Cancel Call Forwarding  Failed</sys:String>
-
-    <sys:String x:Key="PhoneNumberNullError">Phone Number is Null</sys:String>
+    <sys:String x:Key="PhoneNumberNullError">O número do telefone é nulo</sys:String>
+   
 
     <!--add by jinyeqing-->
-    <sys:String x:Key="Mail">Mail</sys:String>
-    <sys:String x:Key="VoiceForwardType">Mail Forward Type</sys:String>
-    <sys:String x:Key="VoiceForwardUnCond">Mail Forward On Available</sys:String>
-    <sys:String x:Key="VoiceForwardNoReply">Mail Forward On NoReply</sys:String>
-    <sys:String x:Key="VoiceForwardBusy">Mail Forward On Busy</sys:String>
-    <sys:String x:Key="VoiceForwardOffline">Mail Forward On Unavailable</sys:String>
-    <sys:String x:Key="NoMail">No Mail Address</sys:String>
-    <sys:String x:Key="VoiceForwardOnDND">Mail Forward On DND</sys:String>
+    <sys:String x:Key="Mail">Correio</sys:String>
+    <sys:String x:Key="VoiceForwardType">Tipo de desvio para correio de voz</sys:String>
+    <sys:String x:Key="VoiceForwardUnCond">Desvio para correio de voz incondicional</sys:String>
+    <sys:String x:Key="VoiceForwardNoReply">Desvio para correio de voz quando não atende</sys:String>
+    <sys:String x:Key="VoiceForwardBusy">Desvio para correio de voz quando ocupado</sys:String>
+    <sys:String x:Key="VoiceForwardOffline">Desvio para correio de voz quando deslogado</sys:String>
+    <sys:String x:Key="NoMail">Sem endereço de correio de voz</sys:String>
+    <sys:String x:Key="VoiceForwardOnDND">Desvio para correio de voz quando não perturbe</sys:String>
 
-    <sys:String x:Key="MailSuccess">Mail Forwarding Success</sys:String>
-    <sys:String x:Key="MailFailed">Mail Forwarding  Failed</sys:String>
+    <sys:String x:Key="MailSuccess">Sucesso no desvio para correio de voz</sys:String>
+    <sys:String x:Key="MailFailed">Falha no desvio para correio de voz</sys:String>
 
-    <sys:String x:Key="CancelMailSuccess">Cancel Mail Forwarding Success</sys:String>
-    <sys:String x:Key="CancelMailFailed">Cancel Mail Forwarding  Failed</sys:String>
-    <sys:String x:Key="MailAdressNullError">Mail Address is Null</sys:String>
-    <sys:String x:Key="SetCallExServiceerror">SetCallExService error</sys:String>
-    <sys:String x:Key="Portcannotbenull">Port can not be null</sys:String>
-    <sys:String x:Key="Passwordcannotbenull">Password can not be null</sys:String>
-    <sys:String x:Key="UserIDcannotbenull">UserID can not be null</sys:String>
-    <sys:String x:Key="Servercannotbenull">Server can not be null</sys:String>
-    <sys:String x:Key="Languagecannotbenull">Language can not be null</sys:String>
-    <sys:String x:Key="startContextCallFailed">StartContextCall Failed</sys:String>
-    <sys:String x:Key="PleaseLoginUCagain">Please Login UC again</sys:String>
-    <sys:String x:Key="somanypeople">20 Mems is max</sys:String>
-    <sys:String x:Key="theconferencehassameperson">The conference has same person</sys:String>
+    <sys:String x:Key="CancelMailSuccess">Sucesso no cancelamento de desvio para correio de voz</sys:String>
+    <sys:String x:Key="CancelMailFailed">Falha no cancelamento de desvio para correio de voz</sys:String>
+    <sys:String x:Key="MailAdressNullError">Endereço de correio de voz é nulo</sys:String>
+    <sys:String x:Key="SetCallExServiceerror">Erro no SetCallExService </sys:String>
+    <sys:String x:Key="Portcannotbenull">Porta não pode ser nula</sys:String>
+    <sys:String x:Key="Passwordcannotbenull">Senha não pode ser nula</sys:String>
+    <sys:String x:Key="UserIDcannotbenull">UserID não pode ser nulo</sys:String>
+    <sys:String x:Key="Servercannotbenull">Servidor não pode ser nulo</sys:String>
+    <sys:String x:Key="Languagecannotbenull">Idioma não pode ser nulo</sys:String>
+    <sys:String x:Key="startContextCallFailed">Falha em StartContextCall</sys:String>
+    <sys:String x:Key="PleaseLoginUCagain">Por favor, logar em UC novamente</sys:String>
+    <sys:String x:Key="somanypeople">Máximo de 20 participantes</sys:String>
+    <sys:String x:Key="theconferencehassameperson"> Já existe</sys:String>
     <sys:String x:Key="NoSuchUCAccount">No Such UC Account</sys:String>
-    <sys:String x:Key="youareincallalready">Can not make different calls in one time</sys:String>
-    <sys:String x:Key="ConAnswer">Conference Answer</sys:String>
-
+    <sys:String x:Key="Youareincallalready">Você já está em uma chamada</sys:String>
+    <sys:String x:Key="ConAnswer">Resposta</sys:String>
+    <sys:String x:Key="Cannotdothisincall">Não é possível executar em chamada</sys:String>
+    <sys:String x:Key="CannotchangeFWDincall">Não é possível executar em chamada</sys:String>
+    <sys:String x:Key="Cannotchangemailincall">Não é possível executar em chamada</sys:String>
+    <sys:String x:Key="Invalidnum">O número é inválido</sys:String>
+    <sys:String x:Key="PleaseAddOneAccountFirst">Por favor adicione uma conta</sys:String>
+    <sys:String x:Key="Cannottansfer">Não é possível transferir para esse número</sys:String>
+    <sys:String x:Key="StatusOffline">O telefone IP está Offline</sys:String>
+    <sys:String x:Key="Statusonline">O telefone IP está online</sys:String>
+    <sys:String x:Key="NoVoicemail">A Caixa de correio de voz está vazia</sys:String>
+    <sys:String x:Key="Success">Sucesso</sys:String>
+    <sys:String x:Key="MailNumberNullError">Número de correrio está vazio</sys:String>
+    <sys:String x:Key="Cannottransfer">Você ainda não configurou a transferência condicional</sys:String>
+    <sys:String x:Key="theNumisExist">Já existe</sys:String>
+    <sys:String x:Key="theNameisExist">Já existe</sys:String>
     <!--add by jinyeqing-->
 
 
 
-    <sys:String x:Key="BlindTransCall">Call Transfer</sys:String>
-    <sys:String x:Key="BlindTransCallSucc">Call Transfer Success</sys:String>
-    <sys:String x:Key="BlindTransCallFail">Call Transfer Failed</sys:String>
+    <sys:String x:Key="BlindTransCall">Transferência de chamada</sys:String>
+    <sys:String x:Key="BlindTransCallSucc">Sucesso na Transferência de chamada</sys:String>
+    <sys:String x:Key="BlindTransCallFail">Falha na Transferência de chamada</sys:String>
 
-    <sys:String x:Key="FWDMailSuccess">Voice Mail Transfer Success</sys:String>
-    <sys:String x:Key="FWDMailFail">Voice Mail Transfer Failed</sys:String>
+    <sys:String x:Key="FWDMailSuccess">Sucesso na transferência para correio de voz</sys:String>
+    <sys:String x:Key="FWDMailFail">Falha na transferência para correio de voz</sys:String>
 
-    <sys:String x:Key="CancelFWDMailSuccess">Cancel Voice Mail Transfer Success</sys:String>
-    <sys:String x:Key="CancelFWDMailFail">Cancel Voice Mail Transfer  Failed</sys:String>
-    <sys:String x:Key="Query">Query</sys:String>
+    <sys:String x:Key="CancelFWDMailSuccess">Sucesso no cancelamento da transferência para correio de voz</sys:String>
+    <sys:String x:Key="CancelFWDMailFail">Falha no cancelamento da transferência para correio de voz</sys:String>
+    <sys:String x:Key="Query">Consulta</sys:String>
 </ResourceDictionary>

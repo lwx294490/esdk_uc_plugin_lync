@@ -21,8 +21,10 @@ namespace LyncWpfApp
     public delegate void ConfMemberEventCB(ref STConfParam _avParam);
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     public delegate void CallEventCB(ref STCallParam _callParam);
+    //[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+    //public delegate void PhoneJointEventCB(int _state);
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    public delegate void PhoneJointEventCB(int _state);
+    public delegate void PhoneJointEventCB(ref PJStatusParam _pj);
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     public delegate void CallReservedEventCB(int type,int reslut);//呼叫转移事件回调函数
 
@@ -75,7 +77,8 @@ namespace LyncWpfApp
         STATUS_STOP_FAILED = 3, //取消联动失败
         STATUS_ONLINE = 4, //IPPhone在线
         STATUS_OFFLINE = 5, //IPPhone离线
-        STATUS_OFFHOOK = 6  //IPPhone摘机
+        STATUS_OFFHOOK = 6,  //IPPhone摘机
+         STATUS_JOINT_OUTGOING = 7  //联动话机呼出
     };
 
     public class UCContactInfo
@@ -124,8 +127,23 @@ namespace LyncWpfApp
         STATUS_STOP_FAILED = 3, //取消联动失败
         STATUS_ONLINE = 4, //IPPhone在线
         STATUS_OFFLINE = 5, //IPPhone离线
-        STATUS_OFFHOOK = 6  //IPPhone摘机
+        STATUS_OFFHOOK = 6, //IPPhone摘机
+        STATUS_JOINT_OUTGOING = 7  //联动话机呼出
     };
+
+    //话机联动参数
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    public struct PJStatusParam
+    {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 100)]
+        public string CalleeNum;	//被叫绑定号
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 100)]
+        public string CalleeName;	//被叫名称
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 100)]
+        public string ucCalleeAcc;//被叫UC账户
+        public int PJ_Status;			     //参考EM_PhoneJointStatusType的定义
+
+    }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
     public struct STAudioVideoParam

@@ -21,6 +21,7 @@ namespace LyncWpfApp
     {
         WinCall call;
         string type;
+        MakeCallBusiness winCall = new MakeCallBusiness();
         public WinSlide(WinCall call,string type)
         {
             InitializeComponent();
@@ -38,6 +39,22 @@ namespace LyncWpfApp
         {
             call.model.Slider_ValueChanged((int)e.NewValue*10, type);
             slider.SelectionEnd = e.NewValue;
+            //modify by 00327190   2015/7/25  静音经麦克的时候，调整音量可以使功能恢复  （之前是不支持 ）
+            if (type == "MicPhone")
+            {
+                UpdateImage.UpdateData(call.imgMic, "/Image/call/Mic_1.png");
+                winCall.UnMuteMic();
+                //call.imgMic.Source = new BitmapImage(new Uri("/LyncWpfApp;component/Image/call/Mic_1.png", UriKind.RelativeOrAbsolute));
+            }
+            else
+            {
+                UpdateImage.UpdateData(call.imgVol, "/Image/call/Spker_1.png");
+                winCall.UnMuteSpker();
+                //call.imgVol.Source = new BitmapImage(new Uri("/LyncWpfApp;component/Image/call/Spker_1.png", UriKind.RelativeOrAbsolute));
+            }
+          
+            
+          
         }
 
         private void Window_MouseLeave(object sender, MouseEventArgs e)

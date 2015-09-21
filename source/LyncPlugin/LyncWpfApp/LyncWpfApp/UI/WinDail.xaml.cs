@@ -111,7 +111,6 @@ namespace LyncWpfApp
                 }
                 //拨号              
                 MakeCallBusiness call = new MakeCallBusiness();
-
                 StringBuilder ucName = new StringBuilder(100);
                 call.GetUCAccount(txtNumber.Text.ToString(), ucName);
                 string str = null;
@@ -153,6 +152,8 @@ namespace LyncWpfApp
             else
             {
                 txtNumber.Text = txtNumber.Text + img.Tag.ToString();
+                txtNumber.Focus();
+                txtNumber.Select(txtNumber.Text.Length, 0);
             }
         }
 
@@ -172,13 +173,11 @@ namespace LyncWpfApp
                     textBox.Text = textBox.Text.Remove(offset, change[0].AddedLength);
                     textBox.Select(offset, 0);
                 }
+                txtNumber.ToolTip = textBox.Text;
             }
         }
 
-        private void imgCall_ImageFailed(object sender, ExceptionRoutedEventArgs e)
-        {
-
-        }
+      
       
     }
 }

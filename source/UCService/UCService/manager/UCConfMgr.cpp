@@ -26,6 +26,8 @@ UCConfMgr::UCConfMgr(void):m_uiConfID(0)
 	,m_strCalleeAccount("")
 	,m_bIsUCAccount(false)
 	,m_emRecvConfCreate(CONF_INIT)
+	,m_ISChairman(false)
+	,m_count(5)
 {
 	try
 	{
@@ -57,6 +59,8 @@ UCConfMgr::~UCConfMgr(void)
 		m_confPhoneMemList.clear();
 		m_confUCMemList.clear();
 		m_mapConfStatusDesc.clear();
+		m_ISChairman = false;
+		m_count = 0;
 	}
 	catch(...)
 	{}
@@ -64,9 +68,9 @@ UCConfMgr::~UCConfMgr(void)
 
 int UCConfMgr::CreateConf(const std::string& groupID,const PhoneMemList& phoneList,const UCMemList& BindNoList,TUP_UINT32& callid)
 {
+	m_count = 5;
 	m_confPhoneMemList.insert(phoneList.begin(),phoneList.end());
 	m_confUCMemList.insert(BindNoList.begin(),BindNoList.end());
-
 	TUP_UINT32 uiConfID = 0;
 	TUP_UINT32 uiCallID = 0;
 	TUP_RESULT tRet = tup_call_serverconf_create(&uiConfID,&uiCallID,groupID.c_str());
@@ -82,6 +86,7 @@ int UCConfMgr::CreateConf(const std::string& groupID,const PhoneMemList& phoneLi
 	m_emRecvConfCreate = CONF_INIT;
 	for(;;)
 	{
+		INFO_LOG("Create Conf Status Waiting.");
 		if(m_emRecvConfCreate == CONF_CREATE_SUCCESS)
 		{
 			INFO_LOG("Create Conf Success.");
@@ -164,7 +169,6 @@ void UCConfMgr::AddConfMember(void)
 			UCGroupMgr::Instance().AddLocalPhoneMember(m_strGroupID,m_strCalleeNum);
 		}
 		NotifyConfUI(item);
-
 
 		tRet = tup_call_serverconf_add_attendee(m_uiConfID,1,m_strCalleeNum.c_str(),m_strCalleeNum.size()+1);
 		if(tRet != TUP_SUCCESS)
@@ -252,13 +256,25 @@ int UCConfMgr::SetConfMemEventCB(ConfMemberEventCB _confmemberEventCB)const
 int UCConfMgr::NotifyConfUI(const STConfParam& item)
 {	
 	INFO_LOG("----NotifyConfUI:ConfID = %d, GroupID = %s,Account = %s, Status= %s.",m_uiConfID,m_strGroupID.c_str(),item.ucAcc,m_mapConfStatusDesc[item.memStatus].c_str());
-	if(NULL == OnConfMemberEventCB)
+	if(NULL == OnConfMemberEventCB || (!m_uiConfID))
 	{
 		ERROR_LOG("----OnConfMemberEventCB is NULL");
 		return UC_SDK_Failed;
 	}
 	else
 	{
+		/////第一次入会成员延时上报   byc00327158   Start//////
+		while (m_count && IsChairman())
+		{
+			if (!m_uiConfID)
+			{
+				//////中途有挂断话机行为，退出循环///////
+				break;
+			}
+			m_count --;
+			Sleep(200);
+		}
+		////第一次入会成员延时上报 byc00327158   End//////
 		INFO_LOG("----Enter OnConfMemberEventCB");
 		OnConfMemberEventCB(item);
 		INFO_LOG("----Leave OnConfMemberEventCB");
@@ -275,6 +291,7 @@ void UCConfMgr::ClearConfMember(void)
 	m_strGroupID.clear();
 	m_confPhoneMemList.clear();
 	m_confUCMemList.clear();
+	m_ISChairman = false;
 }
 int UCConfMgr::LeaveConf(void)
 {
@@ -329,6 +346,7 @@ int UCConfMgr::AcceptConf(void)
 	//停止响铃
 	(void)UCPlayMgr::Instance().EndPlayIncoming();
 	(void)UCPlayMgr::Instance().EndPlayRingBack();
+	(void)UCPlayMgr::Instance().EndPlayHoldCall();
 
 	if(m_strGroupID.empty())
 	{
@@ -363,6 +381,7 @@ int UCConfMgr::RejectConf(void)
 	//停止响铃
 	(void)UCPlayMgr::Instance().EndPlayIncoming();
 	(void)UCPlayMgr::Instance().EndPlayRingBack();
+	(void)UCPlayMgr::Instance().EndPlayHoldCall();
 
 	if(m_strGroupID.empty())
 	{

@@ -326,7 +326,19 @@ void UCGroupMgr::NotifyAllMember(const std::string& strGroupID)
 		item.memStatus = CONF_MEM_ADD;
 		item.memType = UC_ACCOUNT;
 		strcpy_s(item.ucAcc,STRING_LENGTH,strAccount.c_str());
-		UCConfMgr::Instance().NotifyConfUI(item);
+		//DTS2015080403235 已经存在会议中的人，不上报  by c00327158 2015.8.5 Start///////
+		if (!UCConfMgr::Instance().IsUCMemberInconf(strAccount))
+		{
+			UCConfMgr::Instance().NotifyConfUI(item);
+		}
+		//DTS2015080403235 已经存在会议中的人，不上报  by c00327158 2015.8.5 End///////
+		////2015-07-21  byc00327158 上报并获取群组成员状态,解决会议成员状态问题/////
+		TUP_S_LIST arg;
+		char account[IM_D_MAX_ACCOUNT_LENGTH] = {0};
+		strcpy_s(account,IM_D_MAX_ACCOUNT_LENGTH,strAccount.c_str());
+		arg.data = account;
+		arg.next = NULL;
+		tup_im_detectuserstatus(&arg);
 	}
 	PhoneMemList::iterator phoneit = GroupBean->m_groupPhoneMemList.begin();
 	PhoneMemList::iterator phoneitEnd = GroupBean->m_groupPhoneMemList.end();
@@ -336,7 +348,12 @@ void UCGroupMgr::NotifyAllMember(const std::string& strGroupID)
 		item.memStatus = CONF_MEM_ADD;
 		item.memType = UC_IPPHONE;
 		strcpy_s(item.ucAcc,STRING_LENGTH,strphone.c_str());
-		UCConfMgr::Instance().NotifyConfUI(item);
+		//DTS2015080403235 已经存在会议中的人，不上报  by c00327158 2015.8.5 Start///////
+		if (!UCConfMgr::Instance().IsUCMemberInconf(strphone))
+		{
+			UCConfMgr::Instance().NotifyConfUI(item);
+		}
+		//DTS2015080403235 已经存在会议中的人，不上报  by c00327158 2015.8.5 End///////
 	}
 }
 void UCGroupMgr::ClearGroupMember()

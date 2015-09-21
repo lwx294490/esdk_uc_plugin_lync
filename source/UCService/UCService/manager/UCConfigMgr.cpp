@@ -5,6 +5,7 @@
 #include "UCConfigMgr.h"
 #include "UCCallMgr.h"
 #include "SSOLogin.h"
+#include "UCContactMgr.h"
 
 
 PhoneJointEventCB ConfigMgr::m_OnPJEventCB = NULL;
@@ -21,6 +22,8 @@ ConfigMgr::ConfigMgr(void)
 		m_ConfigPath = "";
 		m_strRegDNDCode = "";
 		m_strUNRegDNDCode = "";
+		m_IPtSerStatus = IPtSer_Intit;
+		m_bIsPhonnJointstarting = PhoneJont_init;
 	}
 	catch(...)
 	{
@@ -58,28 +61,48 @@ void ConfigMgr::Uninit(void)
 
 int ConfigMgr::GetPhoneJointDevType(int& _iDevType)
 {
-	const int LENGTH = 10;
-	char tchValue[LENGTH] = {0};
-	(void)::GetPrivateProfileStringA("UCService","activedevice","",tchValue,LENGTH-1,m_ConfigPath.c_str());
-
-	std::string strActiveDev(tchValue);
-	if(0 == strActiveDev.compare("pc"))
+	std::string m_DeviceType;
+	if (GetUserConfig(SETTING_ACTIVEDEVICE_IPPHONE,m_DeviceType))
 	{
-		INFO_LOG("ActiveDev is PC");
-		_iDevType = (int)PC_Device;
+		if (PhoneDevice == m_DeviceType)
+		{
+			//INFO_LOG()
+			INFO_LOG("ActiveDev is IPPhone");
+			////开启话机联动/////
+			SetPhoneJointDevType(IPPhone_Device);
+		}
+		else
+		{
+			//////默认设置为PC
+			INFO_LOG("ActiveDev is PC");
+			_iDevType = (int)PC_Device;
+			std::string m_path = ConfigMgr::Instance().GetConfigPath();
+			if(!::WritePrivateProfileStringA("UCService","activedevice","pc",m_path.c_str()))
+			{
+				ERROR_LOG("----WriteProfileString PC failed");
+			}
+			/////更新服务器配置////
+			ConfigMgr::Instance().SaveUserConfig(SETTING_ACTIVEDEVICE_IPPHONE,"");
+		}
 	}
 	else
 	{
-		INFO_LOG("ActiveDev is IPPhone");
-		_iDevType = (int)IPPhone_Device;
+		//////默认设置为PC
+		INFO_LOG("ActiveDev is PC");
+		_iDevType = (int)PC_Device;
+		std::string m_path = ConfigMgr::Instance().GetConfigPath();
+		if(!::WritePrivateProfileStringA("UCService","activedevice","pc",m_path.c_str()))
+		{
+			ERROR_LOG("----WriteProfileString PC failed");
+		}
+		/////更新服务器配置////
+		ConfigMgr::Instance().SaveUserConfig(SETTING_ACTIVEDEVICE_IPPHONE,"");
 	}
-
-	INFO_LOG("_iDevType=%d",_iDevType);
-
 	return UC_SDK_Success;
 }
 int ConfigMgr::SetPhoneJointDevType(int _iDevType)
 {
+	SetPhoneJontStartingStatus(PhoneJont_init);
 	std::string strLinkNum = UCRegMgr::Instance().GetBindNO();
 	TUP_RESULT tRet = tup_call_joint_setting(0, TUP_TRUE, strLinkNum.c_str());
 	if(tRet != TUP_SUCCESS)
@@ -219,7 +242,7 @@ bool ConfigMgr::GetFowardTypeByNum(const std::string& num,int& iType,std::string
 
 }
 
-std::string ConfigMgr::GetForwardCode(int& _iType)
+std::string ConfigMgr::GetForwardCode(int _iType)
 {
 	return m_mapForward[_iType];
 }
@@ -230,11 +253,11 @@ int ConfigMgr::SetCallExService(int iType,const std::string& strNum)
 	CALL_S_SERVICE_RIGHT_CFG stServiceCfg;  /* 业务权限集结构体指针 */
 	memset(&stServiceCfg, 0, sizeof(stServiceCfg));
 	stServiceCfg.ulRight = 1;
+	m_IPtSerStatus = IPtSer_Intit;
 
 	CALL_E_SERVICE_CALL_TYPE forwardType;
 	TUP_RESULT tRet = TUP_FAIL;
 
-	std::string strServiceCode;
 	switch (iType)
 	{
 	case FORWARD_UNCONDITION:
@@ -243,16 +266,42 @@ int ConfigMgr::SetCallExService(int iType,const std::string& strNum)
 			strncpy_s(stServiceCfg.acDeactiveAccessCode, m_mapForward[1].c_str(), CALL_D_ACCESSCODE_MAX_LENGTH);
 			if(!strNum.empty())
 			{
-				strServiceCode = m_mapForward[0]+strNum;
-				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_UNCONDITION_Active;				
+				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_UNCONDITION_Active;			
 			}
 			else
 			{
-				strServiceCode = m_mapForward[1];
 				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_UNCONDITION_Deactive;
 			}
+			
 			tRet = tup_call_set_cfg(CALL_D_CFG_SERVRIGHT_CFU, (TUP_VOID*)&stServiceCfg);
-			SaveUserConfig(SETTING_FORWARD_FUC,strNum);
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_cfg failed.");
+				return UC_SDK_Failed;
+			}
+			tRet = tup_call_set_IPTservice(forwardType, (TUP_VOID*)strNum.c_str());
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_IPTservice failed.");
+				return UC_SDK_Failed;
+			}
+			//////等待IPT业务成功通知，设置10000毫秒超时/////
+			int _Count = 100;
+			while((_Count>0)&&(IPtSer_Intit == m_IPtSerStatus))
+			{
+				--_Count;
+				Sleep(100);
+				if (IPtSer_Sucess == m_IPtSerStatus)
+				{
+					SaveUserConfig(SETTING_FORWARD_FUC,strNum);
+					return UC_SDK_Success;
+				}
+			    if(IPtSer_Failed == m_IPtSerStatus)
+				{
+					return UC_SDK_Failed;
+				}
+			}
+			return UC_SDK_Failed;
 			break;
 		}
 	case FORWARD_ONBUSY:
@@ -261,16 +310,41 @@ int ConfigMgr::SetCallExService(int iType,const std::string& strNum)
 			strncpy_s(stServiceCfg.acDeactiveAccessCode, m_mapForward[3].c_str(), CALL_D_ACCESSCODE_MAX_LENGTH);
 			if(!strNum.empty())
 			{
-				strServiceCode = m_mapForward[2]+strNum;
 				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_ONBUSY_Active;
 			}
 			else
 			{
-				strServiceCode = m_mapForward[3];
 				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_ONBUSY_Deactive;
 			}
 			tRet = tup_call_set_cfg(CALL_D_CFG_SERVRIGHT_CFB, (TUP_VOID*)&stServiceCfg);
-			SaveUserConfig(SETTING_FORWARD_FB,strNum);
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_cfg failed.");
+				return UC_SDK_Failed;
+			}
+			tRet = tup_call_set_IPTservice(forwardType, (TUP_VOID*)strNum.c_str());
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_IPTservice failed.");
+				return UC_SDK_Failed;
+			}
+			//////等待IPT业务成功通知，设置10000毫秒超时/////
+			int _Count = 100;
+			while((_Count>0)&&(IPtSer_Intit == m_IPtSerStatus))
+			{
+				--_Count;
+				Sleep(100);
+				if (IPtSer_Sucess == m_IPtSerStatus)
+				{
+					SaveUserConfig(SETTING_FORWARD_FB,strNum);
+					return UC_SDK_Success;
+				}
+				if(IPtSer_Failed == m_IPtSerStatus)
+				{
+					return UC_SDK_Failed;
+				}
+			}
+			return UC_SDK_Failed;
 			break;
 		}
 	case FORWARD_NOREPLY:
@@ -279,16 +353,41 @@ int ConfigMgr::SetCallExService(int iType,const std::string& strNum)
 			strncpy_s(stServiceCfg.acDeactiveAccessCode, m_mapForward[5].c_str(), CALL_D_ACCESSCODE_MAX_LENGTH);
 			if(!strNum.empty())
 			{
-				strServiceCode = m_mapForward[4]+strNum;
 				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_NOREPLY_Active;
 			}
 			else
 			{
-				strServiceCode = m_mapForward[5];
 				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_NOREPLY_Deactive;
 			}
 			tRet = tup_call_set_cfg(CALL_D_CFG_SERVRIGHT_CFNA, (TUP_VOID*)&stServiceCfg);
-			SaveUserConfig(SETTING_FORWARD_FNR,strNum);			
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_cfg failed.");
+				return UC_SDK_Failed;
+			}
+			tRet = tup_call_set_IPTservice(forwardType, (TUP_VOID*)strNum.c_str());
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_IPTservice failed.");
+				return UC_SDK_Failed;
+			}
+			//////等待IPT业务成功通知，设置10000毫秒超时/////
+			int _Count = 100;
+			while((_Count>0)&&(IPtSer_Intit == m_IPtSerStatus))
+			{
+				--_Count;
+				Sleep(100);
+				if (IPtSer_Sucess == m_IPtSerStatus)
+				{
+					SaveUserConfig(SETTING_FORWARD_FNR,strNum);	
+					return UC_SDK_Success;
+				}
+				if(IPtSer_Failed == m_IPtSerStatus)
+				{
+					return UC_SDK_Failed;
+				}
+			}
+			return UC_SDK_Failed;		
 			break;
 		}
 	case FORWARD_OFFLINE:
@@ -297,16 +396,41 @@ int ConfigMgr::SetCallExService(int iType,const std::string& strNum)
 			strncpy_s(stServiceCfg.acDeactiveAccessCode, m_mapForward[7].c_str(), CALL_D_ACCESSCODE_MAX_LENGTH);
 			if(!strNum.empty())
 			{
-				strServiceCode = m_mapForward[6]+strNum;
 				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_OFFLINE_Active;
 			}
 			else
 			{
-				strServiceCode = m_mapForward[7];
 				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_OFFLINE_Deactive;
 			}
 			tRet = tup_call_set_cfg(CALL_D_CFG_SERVRIGHT_CFNR , (TUP_VOID*)&stServiceCfg);
-			SaveUserConfig(SETTING_FORWARD_FO,strNum);
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_cfg failed.");
+				return UC_SDK_Failed;
+			}
+			tRet = tup_call_set_IPTservice(forwardType, (TUP_VOID*)strNum.c_str());
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_IPTservice failed.");
+				return UC_SDK_Failed;
+			}
+			//////等待IPT业务成功通知，设置10000毫秒超时/////
+			int _Count = 100;
+			while((_Count>0)&&(IPtSer_Intit == m_IPtSerStatus))
+			{
+				--_Count;
+				Sleep(100);
+				if (IPtSer_Sucess == m_IPtSerStatus)
+				{
+					SaveUserConfig(SETTING_FORWARD_FO,strNum);
+					return UC_SDK_Success;
+				}
+				if(IPtSer_Failed == m_IPtSerStatus)
+				{
+					return UC_SDK_Failed;
+				}
+			}
+			return UC_SDK_Failed;
 			break;
 		}
 	case VOICEMAIL_UNCONDITION:
@@ -315,15 +439,42 @@ int ConfigMgr::SetCallExService(int iType,const std::string& strNum)
 			strncpy_s(stServiceCfg.acDeactiveAccessCode, m_mapForward[9].c_str(), CALL_D_ACCESSCODE_MAX_LENGTH);
 			if(!strNum.empty())
 			{
-				strServiceCode = m_mapForward[8]+strNum;
-				forwardType = CALL_E_SERVICE_CALL_TYPE_CFUVoiceMail_Active;
+				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_UNCONDITION_Active;
 			}
 			else
 			{
-				strServiceCode = m_mapForward[9];
-				forwardType = CALL_E_SERVICE_CALL_TYPE_CFUVoiceMail_Deactive;
+				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_UNCONDITION_Deactive;
 			}
-			SaveUserConfig(SETTING_VOICEMAIL_VNC,strNum);
+
+			tRet = tup_call_set_cfg(CALL_D_CFG_SERVRIGHT_CFU, (TUP_VOID*)&stServiceCfg);
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_cfg failed.");
+				return UC_SDK_Failed;
+			}
+			tRet = tup_call_set_IPTservice(forwardType, (TUP_VOID*)strNum.c_str());
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_IPTservice failed.");
+				return UC_SDK_Failed;
+			}
+			//////等待IPT业务成功通知，设置10000毫秒超时/////
+			int _Count = 100;
+			while((_Count>0)&&(IPtSer_Intit == m_IPtSerStatus))
+			{
+				--_Count;
+				Sleep(100);
+				if (IPtSer_Sucess == m_IPtSerStatus)
+				{
+					SaveUserConfig(SETTING_VOICEMAIL_VNC,strNum);
+					return UC_SDK_Success;
+				}
+				if(IPtSer_Failed == m_IPtSerStatus)
+				{
+					return UC_SDK_Failed;
+				}
+			}
+			return UC_SDK_Failed;
 			break;
 		}
 	case VOICEMAIL_ONBUSY:
@@ -332,15 +483,41 @@ int ConfigMgr::SetCallExService(int iType,const std::string& strNum)
 			strncpy_s(stServiceCfg.acDeactiveAccessCode, m_mapForward[11].c_str(), CALL_D_ACCESSCODE_MAX_LENGTH);
 			if(!strNum.empty())
 			{
-				strServiceCode = m_mapForward[10]+strNum;
-				forwardType = CALL_E_SERVICE_CALL_TYPE_CFBVoiceMail_Active;
+				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_ONBUSY_Active;
 			}
 			else
 			{
-				strServiceCode = m_mapForward[11];
+				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_ONBUSY_Deactive;
 			}
-			SaveUserConfig(SETTING_VOICEMAIL_VB,strNum);
-			forwardType = CALL_E_SERVICE_CALL_TYPE_CFBVoiceMail_Deactive;
+			tRet = tup_call_set_cfg(CALL_D_CFG_SERVRIGHT_CFB, (TUP_VOID*)&stServiceCfg);
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_cfg failed.");
+				return UC_SDK_Failed;
+			}
+			tRet = tup_call_set_IPTservice(forwardType, (TUP_VOID*)strNum.c_str());
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_IPTservice failed.");
+				return UC_SDK_Failed;
+			}
+			//////等待IPT业务成功通知，设置10000毫秒超时/////
+			int _Count = 100;
+			while((_Count>0)&&(IPtSer_Intit == m_IPtSerStatus))
+			{
+				--_Count;
+				Sleep(100);
+				if (IPtSer_Sucess == m_IPtSerStatus)
+				{
+					SaveUserConfig(SETTING_VOICEMAIL_VB,strNum);
+					return UC_SDK_Success;
+				}
+				if(IPtSer_Failed == m_IPtSerStatus)
+				{
+					return UC_SDK_Failed;
+				}
+			}
+			return UC_SDK_Failed;
 			break;
 		}
 	case VOICEMAIL_NOREPLY:
@@ -349,15 +526,41 @@ int ConfigMgr::SetCallExService(int iType,const std::string& strNum)
 			strncpy_s(stServiceCfg.acDeactiveAccessCode, m_mapForward[13].c_str(), CALL_D_ACCESSCODE_MAX_LENGTH);
 			if(!strNum.empty())
 			{
-				strServiceCode = m_mapForward[12]+strNum;
-				forwardType = CALL_E_SERVICE_CALL_TYPE_CFNVoiceMail_Active;
+				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_NOREPLY_Active;
 			}
 			else
 			{
-				strServiceCode = m_mapForward[13];
-				forwardType = CALL_E_SERVICE_CALL_TYPE_CFNVoiceMail_Deactive;
+				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_NOREPLY_Deactive;
 			}
-			SaveUserConfig(SETTING_VOICEMAIL_VNR,strNum);
+			tRet = tup_call_set_cfg(CALL_D_CFG_SERVRIGHT_CFNA, (TUP_VOID*)&stServiceCfg);
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_cfg failed.");
+				return UC_SDK_Failed;
+			}
+			tRet = tup_call_set_IPTservice(forwardType, (TUP_VOID*)strNum.c_str());
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_IPTservice failed.");
+				return UC_SDK_Failed;
+			}
+			//////等待IPT业务成功通知，设置10000毫秒超时/////
+			int _Count = 100;
+			while((_Count>0)&&(IPtSer_Intit == m_IPtSerStatus))
+			{
+				--_Count;
+				Sleep(100);
+				if (IPtSer_Sucess == m_IPtSerStatus)
+				{
+					SaveUserConfig(SETTING_VOICEMAIL_VNR,strNum);
+					return UC_SDK_Success;
+				}
+				if(IPtSer_Failed == m_IPtSerStatus)
+				{
+					return UC_SDK_Failed;
+				}
+			}
+			return UC_SDK_Failed;
 			break;
 		}
 	case VOICEMAIL_OFFLINE:
@@ -365,16 +568,42 @@ int ConfigMgr::SetCallExService(int iType,const std::string& strNum)
 			strncpy_s(stServiceCfg.acActiveAccessCode, m_mapForward[14].c_str(), CALL_D_ACCESSCODE_MAX_LENGTH);
 			strncpy_s(stServiceCfg.acDeactiveAccessCode, m_mapForward[15].c_str(), CALL_D_ACCESSCODE_MAX_LENGTH);
 			if(!strNum.empty())
-			{
-				strServiceCode = m_mapForward[14]+strNum;
-				forwardType = CALL_E_SERVICE_CALL_TYPE_CFOVoiceMail_Active;
+		   {
+				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_OFFLINE_Active;
 			}
 			else
 			{
-				strServiceCode = m_mapForward[15];
+				forwardType = CALL_E_SERVICE_CALL_TYPE_FORWARD_OFFLINE_Deactive;
 			}
-			SaveUserConfig(SETTING_VOICEMAIL_VO,strNum);
-			forwardType = CALL_E_SERVICE_CALL_TYPE_CFOVoiceMail_Deactive;
+			tRet = tup_call_set_cfg(CALL_D_CFG_SERVRIGHT_CFNR , (TUP_VOID*)&stServiceCfg);
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_cfg failed.");
+				return UC_SDK_Failed;
+			}
+			tRet = tup_call_set_IPTservice(forwardType, (TUP_VOID*)strNum.c_str());
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_set_IPTservice failed.");
+				return UC_SDK_Failed;
+			}
+			//////等待IPT业务成功通知，设置10000毫秒超时/////
+			int _Count = 100;
+			while((_Count>0)&&(IPtSer_Intit == m_IPtSerStatus))
+			{
+				--_Count;
+				Sleep(100);
+				if (IPtSer_Sucess == m_IPtSerStatus)
+				{
+			        SaveUserConfig(SETTING_VOICEMAIL_VO,strNum);
+					return UC_SDK_Success;
+				}
+				if(IPtSer_Failed == m_IPtSerStatus)
+				{
+					return UC_SDK_Failed;
+				}
+			}
+			return UC_SDK_Failed;
 			break;
 		}
 
@@ -385,29 +614,14 @@ int ConfigMgr::SetCallExService(int iType,const std::string& strNum)
 		}
 	}
 
-	if(tRet != TUP_SUCCESS)
-	{
-		ERROR_LOG("tup_call_set_cfg failed.");
-		return UC_SDK_Failed;
-	}
-
-	tRet = tup_call_set_IPTservice(forwardType, (TUP_VOID*)strNum.c_str());
-	if(tRet != TUP_SUCCESS)
-	{
-		ERROR_LOG("tup_call_set_IPTservice failed.");
-		return UC_SDK_Failed;
-	}
-	return UC_SDK_Success;
-
 }
 int ConfigMgr::GetCallExService(int iType,std::string& strNum)
 {
-	std::string num;
 	INFO_LOG("iType=%d",iType);	
 	switch (iType)
 	{
 	case FORWARD_UNCONDITION:
-		{		
+		{
 			GetUserConfig(SETTING_FORWARD_FUC,strNum);
 			break;
 		}
@@ -424,6 +638,26 @@ int ConfigMgr::GetCallExService(int iType,std::string& strNum)
 	case FORWARD_OFFLINE:
 		{
 			GetUserConfig(SETTING_FORWARD_FO,strNum);
+			break;
+		}
+	case VOICEMAIL_UNCONDITION:
+		{
+			GetUserConfig(SETTING_VOICEMAIL_VNC,strNum);
+			break;
+		}
+	case VOICEMAIL_ONBUSY:
+		{
+			GetUserConfig(SETTING_VOICEMAIL_VB,strNum);
+			break;
+		}
+	case VOICEMAIL_NOREPLY:
+		{
+			GetUserConfig(SETTING_VOICEMAIL_VNR,strNum);
+			break;
+		}
+	case VOICEMAIL_OFFLINE:
+		{
+			GetUserConfig(SETTING_VOICEMAIL_VO,strNum);
 			break;
 		}
 	default:
@@ -459,7 +693,7 @@ bool ConfigMgr::SaveUserConfig(const std::string & _strkey, const std::string & 
 	return 1 == ecs::ecsdata::AddUserConfigCommand::SingleAdd(configInfo);
 }
 
-int ConfigMgr::NotifyPJUI(int iState)
+int ConfigMgr::NotifyPJUI(const PJStatusParam& _pjParam)
 {
 	DEBUG_TRACE("");
 	if(NULL == m_OnPJEventCB)
@@ -468,8 +702,57 @@ int ConfigMgr::NotifyPJUI(int iState)
 		return UC_SDK_Failed;
 	}
 	INFO_LOG("----Enter OnPJEventCB ");
-	m_OnPJEventCB(iState);
+	ConfigMgr::m_OnPJEventCB(_pjParam);
 	INFO_LOG("----Leave OnPJEventCB");
 	return UC_SDK_Success;
 
+}
+
+void ConfigMgr::InitIPTService(void)
+{
+	//////获取个人portal设置信息///////
+	IM_S_USERINFO userInfo;
+	std::string m_SelfAccount = UCRegMgr::Instance().GetSelfAccount();
+	int iRet = UCContactMgr::Instance().getContactByAccount(UCRegMgr::Instance().GetSelfAccount(),userInfo);
+	if(iRet != UC_SDK_Success)
+	{
+		ERROR_LOG("getContactByAccount failed");
+	}
+	CALL_S_SERVICERIGHT_CFG servicecfg = {0};
+	iRet = tup_call_get_serviceright(0,&servicecfg);
+
+	if (TUP_SUCCESS != iRet )
+	{
+		ERROR_LOG("tup_call_get_serviceright Failed");
+	}
+	//////IPT语音转话机业务重置//////
+	if (servicecfg.astSrvInfo[CALL_E_SERVICE_RIGHT_TYPE_CALLFORWARDING_UNCONDITIONAL].ulRight&&servicecfg.astSrvInfo[CALL_E_SERVICE_RIGHT_TYPE_CALLFORWARDING_UNCONDITIONAL].ulRegister)
+	{
+		const std::string m_strUNum = eSDKTool::utf8str2unicodestr(std::string(servicecfg.stServiceParam.acCallForwardUnconditionNum));
+		SaveUserConfig(SETTING_FORWARD_FUC,m_strUNum);
+	}
+	else
+	{
+		SaveUserConfig(SETTING_FORWARD_FUC,"");
+	}
+
+	if (servicecfg.astSrvInfo[CALL_E_SERVICE_RIGHT_TYPE_CALLFORWARDING_ONBUSY].ulRight&&servicecfg.astSrvInfo[CALL_E_SERVICE_RIGHT_TYPE_CALLFORWARDING_ONBUSY].ulRegister)
+	{
+		const std::string m_strBNum = eSDKTool::utf8str2unicodestr(servicecfg.stServiceParam.acCallForwardOnBusyNum);
+		SaveUserConfig(SETTING_FORWARD_FB,m_strBNum);
+	}
+	else
+	{
+		SaveUserConfig(SETTING_FORWARD_FB,"");
+	}
+
+	if (servicecfg.astSrvInfo[CALL_E_SERVICE_RIGHT_TYPE_CALLFORWARDING_NOREPLY].ulRight&&servicecfg.astSrvInfo[CALL_E_SERVICE_RIGHT_TYPE_CALLFORWARDING_NOREPLY].ulRegister)
+	{
+		const std::string m_strNNum = eSDKTool::utf8str2unicodestr(servicecfg.stServiceParam.acCallForwardNoReplyNum);
+		SaveUserConfig(SETTING_FORWARD_FNR,m_strNNum);
+	}
+	else
+	{
+		SaveUserConfig(SETTING_FORWARD_FNR,"");
+	}
 }

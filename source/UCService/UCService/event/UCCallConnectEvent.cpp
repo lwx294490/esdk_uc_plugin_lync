@@ -55,6 +55,7 @@ bool UCCallConnectEvent::DoHandle(void)
 	//Ω· ¯≤•∑≈¡Â“Ù
 	(void)UCPlayMgr::Instance().EndPlayIncoming();
 	(void)UCPlayMgr::Instance().EndPlayRingBack();
+	(void)UCPlayMgr::Instance().EndPlayHoldCall();
 
 	INFO_LOG("----Enter OnAVSessionConnectedCB");
 	UCCallMgr::OnAVSessionConnectedCB();

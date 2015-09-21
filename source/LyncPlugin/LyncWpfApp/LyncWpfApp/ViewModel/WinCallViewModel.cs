@@ -12,15 +12,22 @@ using System.Threading;
 using Microsoft.Lync.Model;
 using Microsoft.Lync.Model.Group;
 using System.Runtime.InteropServices;
+using System.Windows.Interop;
 
 namespace LyncWpfApp
 {
     public class WinCallViewModel
     {
          WinCall winCall;
-         WinLync winlync;
-         WinCallReceive wincallreceive;
+         WinLync winlync;         
+         //WinCallReceive wincallreceive;
          //TimingMessageBox WinMess;
+         public bool flag = false;
+         public bool flag1 = false;
+         [DllImport("user32.dll", EntryPoint = "ShowWindow", SetLastError = true)]
+         static extern bool ShowWindow(IntPtr hWnd, uint nCmdShow);
+         [DllImport("user32.dll", EntryPoint = "DestroyWindow", SetLastError = true)]
+         static extern bool DestroyWindow(IntPtr hWnd);
          public static object lockObject = new object();
         public ICommand VideoCommand { get; set; }
         public ICommand CallSuspendCommand { get; set; }
@@ -35,11 +42,12 @@ namespace LyncWpfApp
         public ICommand SetVolCommand { get; set; }
         public ICommand BlindTransCallCommand { get; set; }
         public int a = 1;
+       
         public bool StrTemp;
         public int uiSize ;
         public byte[] pSTContactList ;
-       
-        bool isVideo = false;
+
+        public bool isVideo = false;
 
         public bool IsVideo
         {
@@ -59,17 +67,25 @@ namespace LyncWpfApp
         CallEventCB callBackVideoCallEventCB;
         CallReservedEventCB callReservedEventCB;
         CallTransEventCB callTransEventCB;  //modify by jinyeqing 6/3       
-
+       
         public WinCallViewModel(WinCall window, string str)
         {
             try
             {
-                //StrTemp = winlync.strTempBool.ToString();
+                //if (SingletonObj.LoginInfo.LyncName != str.Split(';')[0] && str.Split(';').Length != 1)
+                //{
+                //    this.flag = false;
+                //}
+                //else
+                //{
+                //    this.flag = true;
+                //}
+                //StrTemp = winlync.strTempBool.ToString();                
                 callBackConfMemberEventCB = new ConfMemberEventCB(callBackConfMemberEventCBProcess);
                 callBackVideoCallEventCB = new CallEventCB(callBackVideoCallEventCBProcess);
                 callReservedEventCB = new CallReservedEventCB(callReservedEventCBProcess);
                 callTransEventCB = new CallTransEventCB(callTransEventCBProcess);
-                //modify by jinyeqing 2015/5/22   jiaji 说要把这三个事件回调函数放之前  （上下顺序倒了一下  下面的注释了）
+                //modify by jinyeqing 2015/5/22   jiaji 说要把这三个事件回调函数放之前  （上下顺序倒了一下  下面的注释了）              
                 call.SetConfMemEventCallBack(callBackConfMemberEventCB);
 
                 call.SetVideoCallEventCallBack(callBackVideoCallEventCB);
@@ -94,89 +110,119 @@ namespace LyncWpfApp
                 OpenDialCommand = new DelegateCommand(OpenDialCommandProcess);
                 SetVolCommand = new DelegateCommand(SetVolCommandProcess);
                 BlindTransCallCommand = new DelegateCommand(BlindTransCallCommandProcess);
-
-                lock (WinCall.lockObject)
+                this.winlync = winCall.lync;   //modify by 00327190 2015/7/16
+                try
                 {
-                    try
-                    {
-                        LogManager.SystemLog.Info("WinCallViewModel Monitor.Enter");
-                        contactList = new List<UCContact>();
 
-                        string[] listStr = str.Split(';');
-                        foreach (string con in listStr)
+                    lock (WinCall.lockObject)
+                    {                       
+                       
+                        try
                         {
-                            if (str.IndexOf("VideoCall") > -1 && contactList.Count == 2)
-                            {
-                                break;
-                            }
-                            if (con == "VideoCall")
-                            {
-                                IsVideo = true;
-                                continue;
-                            }
-                            UCContact uc = new UCContact();
-                            uc.UserName = con;
+                            LogManager.SystemLog.Info("WinCallViewModel Monitor.Enter");
+                            contactList = new List<UCContact>();
 
-                            if (contactList.Exists(x => x.UserName == uc.UserName))
+                            string[] listStr = str.Split(';');
+                            foreach (string con in listStr)
                             {
-                                continue;
-                            }
-
-                            if (uc.UserName.IndexOf("@") != -1)
-                            {
-                                uc.UCMemberType = MemberType.UC_ACCOUNT;
-                            }
-                            else
-                            {
-                                uc.UCMemberType = MemberType.UC_IPPHONE;
-                            }
-                            if (contactList.Count == 0)
-                            {
-                                if (IsVideo)
+                                if (str.IndexOf("VideoCall") > -1 && contactList.Count == 2)
                                 {
-                                    winCall.Title = (uc.UserName == SingletonObj.LoginInfo.LyncName ? str.Split(';')[2].ToString() : uc.UserName);
+                                    break;
+                                }
+                                if (con == "VideoCall")
+                                {
+                                    IsVideo = true;
+                                    continue;
+                                }
+                                UCContact uc = new UCContact();
+                                uc.UserName = con;
+
+                                if (contactList.Exists(x => x.UserName == uc.UserName))
+                                {
+                                    continue;
+                                }
+
+                                if (uc.UserName.IndexOf("@") != -1)
+                                {
+                                    uc.UCMemberType = MemberType.UC_ACCOUNT;
+                                }
+                                else  //如果是纯数字，则再分能不能查到对应的UC用户  2015/9/21
+                                {
+                                    StringBuilder ucName = new StringBuilder(100);
+                                    call.GetUCAccountByPhoneNo(uc.UserName, ucName);
+                                    if (ucName.ToString() == "")  //纯话机   2015/9/21
+                                    {
+                                        uc.UCMemberType = MemberType.UC_IPPHONE;
+                                    }
+                                    else
+                                    {
+                                        uc.UCMemberType = MemberType.UC_ACCOUNT;
+                                        uc.UserName = ucName + StringHelper.GetLyncDomainString(SingletonObj.LoginInfo.LyncName);                                       
+                                    }
+                                    //uc.UCMemberType = MemberType.UC_IPPHONE;
+                                }
+                                if (contactList.Count == 0)
+                                {
+                                    if (IsVideo)
+                                    {
+                                        //2015/8/24    UTF8 转码UNICODE
+                                        //byte[] buffer1 = Encoding.Default.GetBytes(str);
+                                        //byte[] buffer2 = Encoding.Convert(Encoding.UTF8, Encoding.Default, buffer1, 0, buffer1.Length);
+                                        //string strBuffer = Encoding.Default.GetString(buffer2, 0, buffer2.Length);
+                                        winCall.Title = (uc.UserName == SingletonObj.LoginInfo.LyncName ? str.Split(';')[2].ToString() : uc.UserName);
+                                    }
+                                    else
+                                    {
+                                        //2015/8/24    UTF8 转码UNICODE
+                                        //byte[] buffer1 = Encoding.Default.GetBytes(str);
+                                        //byte[] buffer2 = Encoding.Convert(Encoding.UTF8, Encoding.Default, buffer1, 0, buffer1.Length);
+                                        //string strBuffer = Encoding.Default.GetString(buffer2, 0, buffer2.Length);
+                                        winCall.Title = (uc.UserName == SingletonObj.LoginInfo.LyncName ? str.Split(';')[1].ToString() : uc.UserName);
+                                    }
+                                    uc.IsLeader = true;
+                                    uc.Mute = MemStatusInCall.CONF_MEM_INCONF;
                                 }
                                 else
                                 {
-                                    winCall.Title = (uc.UserName == SingletonObj.LoginInfo.LyncName ? str.Split(';')[1].ToString() : uc.UserName);
+                                    uc.Mute = MemStatusInCall.CONF_MEM_INVITING;
                                 }
-                                uc.IsLeader = true;
-                                uc.Mute = MemStatusInCall.CONF_MEM_INCONF;
+                                uc.Online = GetContactAvailability((int)uc.UCMemberType, StringHelper.GetSubString(uc.UserName));
+                                contactList.Add(uc);
                             }
-                            else
+
+                            bool isConf = false;
+                            if (contactList.Count > 2)
                             {
-                                uc.Mute = MemStatusInCall.CONF_MEM_INVITING;
+                                isConf = true;
+                                StrTemp = isConf;
                             }
-                            uc.Online = GetContactAvailability((int)uc.UCMemberType, StringHelper.GetSubString(uc.UserName));
-                            contactList.Add(uc);
+                            winCall.Render(contactList, isConf);                         
                         }
-
-                        bool isConf = false;
-                        if (contactList.Count>2)
+                        finally
                         {
-                            isConf = true;
-                            StrTemp = isConf;
+                            LogManager.SystemLog.Info("WinCallViewModel Monitor.Exit");
                         }
-                        winCall.Render(contactList, isConf);
+                        //call.SetConfMemEventCallBack(callBackConfMemberEventCB);
+
+                        //call.SetVideoCallEventCallBack(callBackVideoCallEventCB);
+
+                        //call.SetCallReservedEventCallBack(callReservedEventCB);
                     }
-                    finally
-                    {
-                        LogManager.SystemLog.Info("WinCallViewModel Monitor.Exit");
-                    }
+
+                   
+
+                  
                 }
-
-
-
-                //call.SetConfMemEventCallBack(callBackConfMemberEventCB);
-
-                //call.SetVideoCallEventCallBack(callBackVideoCallEventCB);
-
-                //call.SetCallReservedEventCallBack(callReservedEventCB);
+                catch (System.Exception ex)
+                {
+                    LogManager.SystemLog.Error(ex.ToString());
+                }
             }
             catch (System.Exception ex)
             {
                 LogManager.SystemLog.Error(ex.ToString());
             }
+           
         }
         public void OpenDialCommandProcess()
         {
@@ -184,6 +230,17 @@ namespace LyncWpfApp
             {
                 winCall.lync.winTwoDail = new WinTwoDail(winCall.lync);
                 winCall.lync.winTwoDail.Show();
+            }
+            //modify by 00327190  2015/7/23  如果已经打开，再次按此按钮则显示画面    
+            //Click the button to show the window again if the window was opened  already
+            else
+            {
+                Window frm = winCall.lync.winTwoDail;
+                frm.Focus();
+                //获取该界面句柄       //Get handle of the interface 
+                IntPtr hwnd = new WindowInteropHelper(winCall.lync.winTwoDail).Handle;
+                //显示窗体   //show the window 
+                ShowWindow(hwnd, 1);
             }
         }
         public void HoldDownOneCommandProcess()
@@ -195,6 +252,7 @@ namespace LyncWpfApp
         {
             lock (WinCall.lockObject)
             {
+              
                 try
                 {
                     LogManager.SystemLog.Info("HoldDownOneCommandProcess Monitor.Enter");
@@ -212,6 +270,7 @@ namespace LyncWpfApp
                     LogManager.SystemLog.Info("HoldDownOneCommandProcess Monitor.Exit");
                 }
             }
+          
         }
         public void ReInviteOneCommandProcess()
         {
@@ -222,6 +281,7 @@ namespace LyncWpfApp
         {
             lock (WinCall.lockObject)
             {
+               
                 try
                 {
                     LogManager.SystemLog.Info("ReInviteOneCommandProcess Monitor.Enter");
@@ -240,6 +300,7 @@ namespace LyncWpfApp
 
                 }
             }
+           
         }
 
         public void MuteCommandProcess()
@@ -251,6 +312,7 @@ namespace LyncWpfApp
         {
             lock (WinCall.lockObject)
             {
+               
                 try
                 {
                     LogManager.SystemLog.Info("MuteCommandProcess Monitor.Enter");
@@ -277,6 +339,7 @@ namespace LyncWpfApp
                     LogManager.SystemLog.Info("MuteCommandProcess Monitor.Exit");
                 }
             }
+           
         }
         public void RemoveCommandProcess()
         {
@@ -287,6 +350,7 @@ namespace LyncWpfApp
         {
             lock (WinCall.lockObject)
             {
+              
                 try
                 {
                     LogManager.SystemLog.Info("RemoveCommandProcess Monitor.Enter");
@@ -310,6 +374,7 @@ namespace LyncWpfApp
                     LogManager.SystemLog.Info("RemoveCommandProcess Monitor.Exit");
                 }
             }
+          
         }
         private void SetMicPhoneCommandProcess()
         {
@@ -347,6 +412,11 @@ namespace LyncWpfApp
                     {
                         winCall.SetUCVideo();
                     }
+                    //2015/7/27
+                    if (winlync.isConnected == true)
+                    {
+                        winCall.btnVideo.IsEnabled = false;
+                    }
                     STVideoWindow stLocalWnd = new STVideoWindow();
                     STVideoWindow stRemoteWnd = new STVideoWindow();
                     winCall.GetVideoPlayPara(ref stLocalWnd, ref stRemoteWnd);
@@ -375,17 +445,151 @@ namespace LyncWpfApp
             {
                 UpdateImage.UpdateData(winCall.imgCallSuspend, "/Image/call/Resume_1.png");
                 call.holdCall();
+                if (winCall.strtemp.Split(';')[0] != "VideoCall" && winCall.strtemp.Split(';')[0] !="Call")  //直接人名打头的情况   2015/8/5
+                {
+
+                    //主被叫呼叫保持时的加人按钮的状态   modify by 00327190 2015/7/16
+                    if (SingletonObj.LoginInfo.LyncName != winCall.strtemp.Split(';')[0] && winCall.strtemp.Split(';').Length != 1)   //被叫   //之前是str.Split(';')[0]    2015/7/30
+                    {
+                       
+                        winCall.btnAddContact.IsEnabled = false;
+                        winCall.btnVideo.IsEnabled = false;
+                        winCall.btnBlindTransCall.IsEnabled = false;
+                        if (winCall.lync.isConnected == true)   //语音升级视频下，如果按保持呼叫按钮 winCall.lync.Ishold = true;  //2015/8/18
+                        {
+                            winCall.lync.Ishold = true;
+                        }
+                    }
+                    else
+                    {
+                        winCall.btnAddContact.IsEnabled = false;
+                        winCall.btnVideo.IsEnabled = false;
+                        winCall.btnBlindTransCall.IsEnabled = false;
+                        if (winCall.lync.isConnected == true)   //语音升级视频下，如果按保持呼叫按钮 winCall.lync.Ishold = true;  //2015/8/18
+                        {
+                            winCall.lync.Ishold = true;
+                        }
+                    }
+                }
+                else     //视频情况下   2015/8/5
+                {
+                    if (SingletonObj.LoginInfo.LyncName != winCall.strtemp.Split(';')[1] && winCall.strtemp.Split(';').Length != 1)   //被叫   //之前是str.Split(';')[0]    2015/7/30
+                    {
+                        winCall.btnAddContact.IsEnabled = false;
+                        winCall.btnVideo.IsEnabled = false;
+                        winCall.btnBlindTransCall.IsEnabled = false;
+                        winCall.lync.Ishold = true;
+
+                    }
+                    else
+                    {
+                        winCall.btnAddContact.IsEnabled = false;
+                        winCall.btnVideo.IsEnabled = false;
+                        winCall.btnBlindTransCall.IsEnabled = false;
+                        winCall.lync.Ishold = true;
+                    }
+                }
+
             }
             else
             {
                 UpdateImage.UpdateData(winCall.imgCallSuspend, "/Image/call/CallHold_1.png");
                 call.resumeCall();
+                //主被叫取消呼叫保持时的加人按钮的状态   modify by 00327190 2015/7/16
+                if (winCall.strtemp.Split(';')[0] != "VideoCall" && winCall.strtemp.Split(';')[0] != "Call")  //语音情况下   2015/8/5
+                {
+                    if (SingletonObj.LoginInfo.LyncName != winCall.strtemp.Split(';')[0] && winCall.strtemp.Split(';').Length != 1)   //被叫  //被叫   //之前是str.Split(';')[0]    2015/7/30
+                    {
+                        winCall.btnAddContact.IsEnabled = false;
+                        winCall.btnBlindTransCall.IsEnabled = true;
+                        winCall.lync.Ishold = false;  //8/18
+                        //话机联动状态下,视频按钮不能使用
+                        //If you are in phone joint,you can not use the Video button
+                        if (winlync.toolBar.JointType == PhoneJointType.IPPhone_Device)
+                        {
+                            winCall.btnVideo.IsEnabled = false;
+                            UpdateImage.UpdateData(winCall.imgVideo, "/Image/call/video_3.png");
+                        }
+                        else
+                        {
+                            winCall.btnVideo.IsEnabled = true;
+                        }
+                    }
+                    else
+                    {
+                        winCall.btnAddContact.IsEnabled = true;
+                        winCall.btnBlindTransCall.IsEnabled = true;
+                        winCall.lync.Ishold = false;  //8/18
+                        //话机联动状态下,视频按钮不能使用
+                        //If you are in phone joint,you can not use the Video button
+                        if (winlync.toolBar.JointType == PhoneJointType.IPPhone_Device)
+                        {
+                            winCall.btnVideo.IsEnabled = false;
+                            UpdateImage.UpdateData(winCall.imgVideo, "/Image/call/video_3.png");
+                        }
+                        else
+                        {
+                            winCall.btnVideo.IsEnabled = true;
+                        }
+                    }
+                }
+                else    //视频或者开始为Call情况下   2015/8/5
+                {
+                    if (SingletonObj.LoginInfo.LyncName != winCall.strtemp.Split(';')[1] && winCall.strtemp.Split(';').Length != 1)   //被叫  //被叫   //之前是str.Split(';')[0]    2015/7/30
+                    {
+                        winCall.btnAddContact.IsEnabled = false;
+                        winCall.btnBlindTransCall.IsEnabled = true;
+                        winCall.lync.Ishold = false;  //8/5 
+
+                        //话机联动状态下,视频按钮不能使用
+                        //If you are in phone joint,you can not use the Video button
+                        if (winlync.toolBar.JointType == PhoneJointType.IPPhone_Device)
+                        {
+                            winCall.btnVideo.IsEnabled = false;
+                            UpdateImage.UpdateData(winCall.imgVideo, "/Image/call/video_3.png");
+                        }
+                        else
+                        {
+                            winCall.btnVideo.IsEnabled = true;
+                        }
+                    }
+                    else
+                    {
+                        winCall.btnAddContact.IsEnabled = true;
+                        winCall.btnBlindTransCall.IsEnabled = true;
+                        winCall.lync.Ishold = false;   //8/5
+                        //话机联动状态下,视频按钮不能使用
+                        //If you are in phone joint,you can not use the Video button
+                        if (winlync.toolBar.JointType == PhoneJointType.IPPhone_Device)
+                        {
+                            winCall.btnVideo.IsEnabled = false;
+                            UpdateImage.UpdateData(winCall.imgVideo, "/Image/call/video_3.png");
+                        }
+                        else
+                        {
+                            winCall.btnVideo.IsEnabled = true;
+                        }
+                    }
+                }
             }
         }
         private void HoldDownCommandProcess()
         {
+            if (winCall.lync.isHave == true)
+            {
+                call.RejectVideoCall();                 
+                Thread.Sleep(1000);                             
+            }
             call.hangupCall();
             winCall.Close();
+            if (winCall.lync.isHave == true)
+            {
+                //强制关闭Receive界面                 
+                DestroyWindow(winCall.lync.hwnd);
+                winCall.lync.isHave = false;
+            }
+            winCall.lync.Ishold = false;   //2015/8/18 
+            winCall.lync.IsBlindTrans = false;   //2015/8/18
         }
         void AddContactCommandProcess()
         {
@@ -419,18 +623,14 @@ namespace LyncWpfApp
                     string b = dt1.Rows[j]["Url"].ToString().Trim();
                     if (b != "" && b != null)     //UC帐号和话机联动账号添加，url不空
                     {
-                        string a = contactList[i].UserName.ToString().Trim();
-                        //string b = dt1.Rows[j]["Url"].ToString().Trim();
+                        string a = contactList[i].UserName.ToString().Trim();                       
                         //string c = a.Substring(0, a.Length - 10).ToString().Trim();   //这个是截取 @lync1.com之前的字符串的方法                        
                         if (String.Compare(a, b) == 0 || a.Equals(b) || a == b)
                         {
-                            string message = StringHelper.FindLanguageResource("theconferencehassameperson") + (a);
+                            string message = (a) + " " + StringHelper.FindLanguageResource("theconferencehassameperson");
                             winCall.OpenDialogTiming(message, "error", 2);
                             dt1.Rows[j].Delete();
-                            if (dt1.Rows.Count == 0)   //如果dt1已为空，则返回，反之继续进行  
-                            {
-                                return;
-                            }
+                           // return;
                         }
                     }
                     else   //话机添加（没有对应UC账号），url为空，只能根据phone比较
@@ -440,14 +640,10 @@ namespace LyncWpfApp
                         string d = dt1.Rows[j]["phone"].ToString().Trim();
                         if (String.Compare(a, d) == 0 || a.Equals(d) || a == d)
                         {
-                            string message = StringHelper.FindLanguageResource("theconferencehassameperson") + (a);
-                            //DialogShow.Show(message, StringHelper.FindLanguageResource("error"), 2);
+                            string message = (a)+ " " +StringHelper.FindLanguageResource("theconferencehassameperson");                           
                             winCall.OpenDialogTiming(message, "error", 2);
                             dt1.Rows[j].Delete();
-                            if (dt1.Rows.Count == 0)
-                            {
-                                return;
-                            }                            
+                            //return;
                         }
 
                     }
@@ -456,21 +652,115 @@ namespace LyncWpfApp
 
             }
             dt1.AcceptChanges();
-            int count = dt1.Rows.Count + contactList.Count;           
-            if (count<=20)   //多于20个人就不添加了 (应该是原先列表加上新加的人数大于20才不添加)
+            int count = dt1.Rows.Count + contactList.Count;          
+            if (dt1.Rows.Count != 0)
             {
-                lock (WinCall.lockObject)
+                if (count <= 20)   //多于20个人就不添加了 (应该是原先列表加上新加的人数大于20才不添加)
                 {
-                    if (StrTemp == true)   //为conference 时，走这个接口 
+                    lock (WinCall.lockObject)
                     {
-                        try
+                       
+                        if (StrTemp == true)   //为conference 时，走这个接口 
                         {
+                            try
+                            {
 
+                                LogManager.SystemLog.Info("GetSelectContactFun Monitor.Enter");
+                                DataTable dt = (DataTable)obj;
+                                int type = 0;
+                                foreach (DataRow dr in dt1.Rows)
+                                {
+                                    string str = dr["Url"].ToString() == "" ? dr["Phone"].ToString() : dr["Url"].ToString();
+                                    string userName = "";
+                                    if (str.IndexOf("sip") > -1)
+                                    {
+                                        str = str.Substring(str.IndexOf(":") + 1);
+                                    }
+                                    STConfMember ST = new STConfMember();
+                                    StringBuilder ucName = new StringBuilder(100);
+                                    // if (call.GetUCAccount(str, ucName) == 0)   //回调成功   modify by 00327190   之前没有if判断，现在只有能成功才可以入会 
+                                    //{
+                                    if (dr["Name"].ToString() == "")
+                                    {
+                                        call.GetUCAccount(str, ucName);
+                                        if (ucName.ToString() != "")
+                                        {
+                                            userName = ucName + StringHelper.GetLyncDomainString(SingletonObj.LoginInfo.LyncName);
+                                            type = 0;
+                                            str = userName.ToString();
+                                            //2015/8/6
+                                            ST.membertype = type;
+                                            ST.account = ucName.ToString();
+                                        }
+                                        else
+                                        {
+                                            userName = str;
+                                            type = 1;
+                                            //2015/8/6
+                                            ST.membertype = type;
+                                            ST.account = str;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        userName = str;
+                                        type = 0;
+                                        //2015/8/6
+                                        ST.membertype = type;
+                                        ST.account = str.Replace(StringHelper.GetLyncDomainString(SingletonObj.LoginInfo.LyncName), "");
+                                    }
+
+                                    UCContact uc = new UCContact();
+
+                                    uc.UCMemberType = (MemberType)type;
+                                    uc.Mute = MemStatusInCall.CONF_MEM_INVITING;
+                                    uc.UserName = userName;
+                                    uc.Online = GetContactAvailability(type, StringHelper.GetSubString(uc.UserName));//查询uc状态
+
+                                    contactList.Add(uc);
+
+                                    call.InviteMemberInCall(type, new StringBuilder(StringHelper.GetSubString(str)));
+
+                                    //}
+                                    //else
+                                    //{
+                                    //    string message = StringHelper.FindLanguageResource("error") + (str);
+                                    //    winCall.OpenDialogTiming(message, "error", 3);
+                                    //}
+                                }
+                                IEnumerable<UCContact> noduplicates = contactList.Distinct(new ContactCompar());
+                                List<UCContact> temp = new List<UCContact>();
+                                foreach (var contact in noduplicates)
+                                {
+                                    temp.Add(contact);
+                                }
+                                contactList = temp;
+                                winCall.Render(contactList);
+                                winCall.IsEnableChanged();
+
+
+                            }
+
+                            finally
+                            {
+                                LogManager.SystemLog.Info("GetSelectContactFun Monitor.Exit");
+                            }
+                        }
+                        else   ////为call 时，点呼转多人，走这个接口 
+                        {
+                            StrTemp = true;
                             LogManager.SystemLog.Info("GetSelectContactFun Monitor.Enter");
                             DataTable dt = (DataTable)obj;
                             int type = 0;
-                            foreach (DataRow dr in dt1.Rows)
+
+                            STConfMemList ST1 = new STConfMemList();
+                            ST1.stConfMem = new STConfMember[dt.Rows.Count];
+                            ST1.size = dt.Rows.Count;
+                            for (int i = 0; i < dt1.Rows.Count; i++)
                             {
+                                DataRow dr = dt.Rows[i];
+                                STConfMember ST = new STConfMember();
+
                                 string str = dr["Url"].ToString() == "" ? dr["Phone"].ToString() : dr["Url"].ToString();
                                 string userName = "";
                                 if (str.IndexOf("sip") > -1)
@@ -478,155 +768,83 @@ namespace LyncWpfApp
                                     str = str.Substring(str.IndexOf(":") + 1);
                                 }
                                 StringBuilder ucName = new StringBuilder(100);
-                                // if (call.GetUCAccount(str, ucName) == 0)   //回调成功   modify by 00327190   之前没有if判断，现在只有能成功才可以入会 
-                                //{
                                 if (dr["Name"].ToString() == "")
                                 {
                                     call.GetUCAccount(str, ucName);
                                     if (ucName.ToString() != "")
                                     {
-                                        userName = ucName + StringHelper.GetLyncDomainString(SingletonObj.LoginInfo.LyncName);
+                                        userName = ucName + StringHelper.GetLyncDomainString(SingletonObj.LoginInfo.LyncName);  
                                         type = 0;
                                         str = userName.ToString();
+                                        ST.membertype = type;
+                                        ST.account = ucName.ToString();
                                     }
                                     else
                                     {
                                         userName = str;
                                         type = 1;
+                                        ST.membertype = type;
+                                        ST.account = str;
                                     }
                                 }
                                 else
                                 {
                                     userName = str;
                                     type = 0;
+                                    ST.membertype = type;
+                                    ST.account = str.Replace(StringHelper.GetLyncDomainString(SingletonObj.LoginInfo.LyncName), "");
                                 }
 
+                                ST1.stConfMem[i] = ST;
+                                ST1.size = i + 1;
                                 UCContact uc = new UCContact();
-
                                 uc.UCMemberType = (MemberType)type;
                                 uc.Mute = MemStatusInCall.CONF_MEM_INVITING;
                                 uc.UserName = userName;
                                 uc.Online = GetContactAvailability(type, StringHelper.GetSubString(uc.UserName));//查询uc状态
-
                                 contactList.Add(uc);
 
-                                call.InviteMemberInCall(type, new StringBuilder(StringHelper.GetSubString(str)));
-
-                                //}
-                                //else
-                                //{
-                                //    string message = StringHelper.FindLanguageResource("error") + (str);
-                                //    winCall.OpenDialogTiming(message, "error", 3);
-                                //}
                             }
-                            IEnumerable<UCContact> noduplicates = contactList.Distinct(new ContactCompar());
-                            List<UCContact> temp = new List<UCContact>();
-                            foreach (var contact in noduplicates)
+                            int iSizeSTContact = Marshal.SizeOf(typeof(STConfMember));
+                            int iSizeSTContactList = Marshal.SizeOf(typeof(STConfMemList));
+                            uiSize = iSizeSTContactList + (dt.Rows.Count - 1) * iSizeSTContact;
+                            pSTContactList = StructToBytes(ST1);
+                            if (call.UC_SDK_TransCallToConf(pSTContactList, uiSize) == 0)
                             {
-                                temp.Add(contact);
-                            }
-                            contactList = temp;
-                            winCall.Render(contactList);
-                            winCall.IsEnableChanged(); 
-
-
-                        }
-
-                        finally
-                        {
-                            LogManager.SystemLog.Info("GetSelectContactFun Monitor.Exit");
-                        }
-                    }
-                    else   ////为call 时，点呼转多人，走这个接口 
-                    {
-                        StrTemp = true;
-                        LogManager.SystemLog.Info("GetSelectContactFun Monitor.Enter");
-                        DataTable dt = (DataTable)obj;
-                        int type = 0;
-                        
-                        STConfMemList ST1 = new STConfMemList();
-                        ST1.stConfMem = new STConfMember[dt.Rows.Count];
-                        ST1.size = dt.Rows.Count;
-                        for(int i=0;i<dt1.Rows.Count;i++)                        
-                        {
-                            DataRow dr = dt.Rows[i];
-                            STConfMember ST = new STConfMember();
-
-                            string str = dr["Url"].ToString() == "" ? dr["Phone"].ToString() : dr["Url"].ToString();
-                            string userName = "";
-                            if (str.IndexOf("sip") > -1)
-                            {
-                                str = str.Substring(str.IndexOf(":") + 1);
-                            }
-                            StringBuilder ucName = new StringBuilder(100);                         
-                            if (dr["Name"].ToString() == "")
-                            {
-                                call.GetUCAccount(str, ucName);
-                                if (ucName.ToString() != "")
+                                IEnumerable<UCContact> noduplicates = contactList.Distinct(new ContactCompar());
+                                List<UCContact> temp = new List<UCContact>();
+                                foreach (var contact in noduplicates)
                                 {
-                                    userName = ucName + StringHelper.GetLyncDomainString(SingletonObj.LoginInfo.LyncName);
-                                    type = 0;
-                                    str = userName.ToString();
-                                    ST.membertype = type;
-                                    ST.account = ucName.ToString();
+                                    temp.Add(contact);
                                 }
-                                else
-                                {
-                                    userName = str;
-                                    type = 1;
-                                    ST.membertype = type;
-                                    ST.account = str;
-                                }
+                                contactList = temp;
+                                winCall.Render(contactList);
+                                //winCall.IsConf();
+                                winCall.IsEnableChanged();
                             }
                             else
                             {
-                                userName = str;
-                                type = 0;
-                                ST.membertype = type;
-                                ST.account = str.Replace(StringHelper.GetLyncDomainString(SingletonObj.LoginInfo.LyncName),"");
+                                DialogShow.Show(StringHelper.FindLanguageResource("error"), StringHelper.FindLanguageResource("error"), 2);
+                                return;
                             }
-
-                            ST1.stConfMem[i] = ST;
-                            ST1.size =i+1;
-                            UCContact uc = new UCContact();
-                            uc.UCMemberType = (MemberType)type;
-                            uc.Mute = MemStatusInCall.CONF_MEM_INVITING;
-                            uc.UserName = userName;
-                            uc.Online = GetContactAvailability(type, StringHelper.GetSubString(uc.UserName));//查询uc状态
-                            contactList.Add(uc);                           
-
-                        }
-                        int iSizeSTContact = Marshal.SizeOf(typeof(STConfMember));
-                        int iSizeSTContactList = Marshal.SizeOf(typeof(STConfMemList));
-                        uiSize = iSizeSTContactList + (dt.Rows.Count - 1) * iSizeSTContact;
-                        pSTContactList=StructToBytes(ST1);
-                        if (call.UC_SDK_TransCallToConf(pSTContactList, uiSize) == 0)
-                        {
-                            IEnumerable<UCContact> noduplicates = contactList.Distinct(new ContactCompar());
-                            List<UCContact> temp = new List<UCContact>();
-                            foreach (var contact in noduplicates)
-                            {
-                                temp.Add(contact);
-                            }
-                            contactList = temp;
-                            winCall.Render(contactList);
-                            //winCall.IsConf();
-                            winCall.IsEnableChanged(); 
-                        }
-                        else
-                        {
-                            DialogShow.Show(StringHelper.FindLanguageResource("error"), StringHelper.FindLanguageResource("error"), 2);
-                            return;
                         }
                     }
+
                 }
-                
+                else
+                {
+                    winCall.OpenDialogTiming("somanypeople", "error", 2);
+                    winCall.lync.setBtn();  //2015/8/17   之前由于视频转移导入的添加界面OK键使得加人键禁用原因
+                    return;
+                }
             }
             else
             {
-                winCall.OpenDialogTiming("somanypeople", "error",2);               
-                return;          
+                //winCall.OpenDialogTiming("PleaseAddOneAccountFirst", "error", 2);
+                //return;
             }
+           
+            winCall.lync.setBtn();
         }
 
         
@@ -656,11 +874,11 @@ namespace LyncWpfApp
         {
             if (type == "MicPhone")
             {
-                call.SetMicLevel((int)newValue);
+                call.SetMicLevel((int)newValue);                       
             }
             else
             {
-                call.SetSpkerLevel((int)newValue);
+                call.SetSpkerLevel((int)newValue);               
             }
         }
         public int Slider_GetValue(string type)
@@ -700,7 +918,9 @@ namespace LyncWpfApp
                 winCall.lync.winAllContact = new WinAllContact(winCall.lync,true);
                 winCall.lync.winAllContact.AddContactChanged = GetBlindContact;
                 winCall.lync.winAllContact.Show();
+                winCall.lync.IsBlindTrans = true;
             }
+
         }
 
         /// <summary>
@@ -745,8 +965,10 @@ namespace LyncWpfApp
                 int iRet = call.BlindTransCall(type, userName);
                 if (iRet != (int)UCServiceRetvCode.UC_SDK_Success)
                 {
+                    winCall.lync.IsTransfer = true;
                     LogManager.SystemLog.Error("BlindTransCall error");
-                    winCall.OpenDialog("BlindTransCallFail", "error");
+                    winCall.OpenDialog("BlindTransCallFail", "error");                    
+                    winCall.lync.setBtn();   //2015/8/18
                 }
                 break;
             }
@@ -762,125 +984,138 @@ namespace LyncWpfApp
             }
             else if (st == CallStatus.CALL_VIDEO_CLOSE)
             {
-                CloseVideo();
-               
+                //2015/7/27
+                if (winCall.lync.isConnected == true)   //语音升级视频
+                {
+                    if (winCall.lync.toolBar.JointType == PhoneJointType.PC_Device)
+                    {
+                        winCall.VideoClose(); 
+                    }
+                }
+                CloseVideo();               
+            }
+                //modify by 00327190   2015/7/27
+            else if (st == CallStatus.CALL_VIDEO_CONNECTED)
+            {
+                winCall.VideoConnected();                
+
             }
 
         }
+      
         void CloseVideo()
         {
             winCall.CloseWinVideo();
             
         }
         private void callBackConfMemberEventCBProcess(ref STConfParam _avParam)
-        {
+        {            
+            LogManager.SystemLog.Info("callBackConfMemberEventCBProcess Monitor.Enter");
             ParameterizedThreadStart para = new ParameterizedThreadStart(StartUpdateCallWin);
             Thread thread = new Thread(para);
-            thread.Priority = ThreadPriority.Highest;
+            thread.Priority = ThreadPriority.Highest;   //之前是Highest  2015/8/11 
             thread.Start(_avParam);
         }
+               
+
         void StartUpdateCallWin(object avParam)
         {
-           
+
             lock (WinCall.lockObject)
             {
+                //this.flag1 = false;              
                 try
                 {
-                    LogManager.SystemLog.Info("StartUpdateCallWin Monitor.Enter");
-                    STConfParam _avParam = new STConfParam();
-                    _avParam = (STConfParam)avParam;
-                    LogManager.SystemLog.Info("Start ConfMemberEventCB");
-                    //modify  by 00327190 2015/6/15
-
-
-                    //if (_avParam.memStatus == 2)
-                    //{
-                    //   a=a++;
-                    //   winCall.Titlechange(contactList, a);
-
-                    //}
-                    //modify  by 00327190 2015/6/15
-                    string str = _avParam.callerAcc_;
-                    if (str == "")
+                    if (contactList != null)  //modify by 00327190   2015/8/10
                     {
-                        if (_avParam.memStatus == (int)MemStatusInCall.CONF_MEM_SPK)
+                        LogManager.SystemLog.Info("StartUpdateCallWin Monitor.Enter");
+                        STConfParam _avParam = new STConfParam();
+                        _avParam = (STConfParam)avParam;
+                        LogManager.SystemLog.Info("Start ConfMemberEventCB");
+                        string str = _avParam.callerAcc_;
+                        if (str == "")
                         {
-                            foreach (UCContact uc1 in contactList)
+                            if (_avParam.memStatus == (int)MemStatusInCall.CONF_MEM_SPK)
                             {
-                                uc1.IsSpeaker = false;
-                            }
-                        }
-                        LogManager.SystemLog.Info("End ConfMemberEventCB");
-                        return;
-                    }
-                    else
-                    {                       
-                        if (contactList.FindIndex((x) => { return StringHelper.GetSubString(x.UserName) == str; }) == -1)
-                        {
-                            UCContact uc = new UCContact();
-                            if (_avParam.memType == (int)MemberType.UC_IPPHONE)
-                            {
-                                uc.UserName = str;
-                            }
-                            else
-                            {
-                                uc.UserName = str + StringHelper.GetLyncDomainString(SingletonObj.LoginInfo.LyncName);
-                            }
-                            uc.Mute = (MemStatusInCall)_avParam.memStatus;
-                            uc.UCMemberType = (MemberType)_avParam.memType;
-                            uc.Online = GetContactAvailability(_avParam.memType, str);
-                            //if 是modify by jinyeqing   之前是没有的
-                            if (_avParam.memStatus != (int)MemStatusInCall.CONF_MEM_DEL)
-                            {
-                                contactList.Add(uc);
-                            }   
-                            winCall.Render(contactList);
-                            //winCall.AddContactWinSize(contactList);
-                            LogManager.SystemLog.Info("End ConfMemberEventCB");
-                            return;
-                        }
-                        else if (!winCall.IsConf())//修改呼叫三人会议，一人未接，被叫者不是会议状态的bug
-                        {
-                            winCall.Render(contactList);
-                        }
-                    }
-                    UCContact ucFrist = contactList.First((x) => { return StringHelper.GetSubString(x.UserName) == str; });
-                    if (ucFrist != null)
-                    {
-                        if ((_avParam.memStatus == (int)MemStatusInCall.CONF_MEM_DEL || _avParam.memStatus == (int)MemStatusInCall.CONF_MEM_QUIT)
-                            && contactList.FindIndex((x) => { return x.IsLeader == true && StringHelper.GetSubString(x.UserName) == str; }) != -1)
-                        {
-                            //临时注释掉 会议主席离会时，关闭会议的处理，只更新状态
-                            //winCall.CloseCallInThread();
-                            ucFrist.Mute = (MemStatusInCall)_avParam.memStatus;
-                            return;
-                        }
-                        switch (_avParam.memStatus)
-                        {
-                            case (int)MemStatusInCall.CONF_MEM_SPK:
                                 foreach (UCContact uc1 in contactList)
                                 {
                                     uc1.IsSpeaker = false;
                                 }
-                                ucFrist.IsSpeaker = true;
-                                break;
-                            //case (int)MemStatusInCall.CONF_MEM_QUIT:
-                            case (int)MemStatusInCall.CONF_MEM_DEL:
-                                contactList.Remove(ucFrist);
-                                winCall.Render(contactList);                               
-                                //  winCall.AddContactWinSize(contactList);
-                                break;                            
-                            default:
+                            }
+                            LogManager.SystemLog.Info("End ConfMemberEventCB1");
+                            return;
+                        }
+                        else
+                        {
+
+                            if (contactList.FindIndex((x) => { return StringHelper.GetSubString(x.UserName) == str; }) == -1)
+                            {
+                                UCContact uc = new UCContact();
+                                if (_avParam.memType == (int)MemberType.UC_IPPHONE)
+                                {
+                                    uc.UserName = str;
+                                }
+                                else
+                                {
+                                    uc.UserName = str + StringHelper.GetLyncDomainString(SingletonObj.LoginInfo.LyncName);
+                                }
+                                uc.Mute = (MemStatusInCall)_avParam.memStatus;
+                                uc.UCMemberType = (MemberType)_avParam.memType;
+                                uc.Online = GetContactAvailability(_avParam.memType, str);
+                                //if 是modify by jinyeqing   之前是没有的
+                                if (_avParam.memStatus != (int)MemStatusInCall.CONF_MEM_DEL)
+                                {
+                                    contactList.Add(uc);
+                                }
+                                winCall.Render(contactList);
+                                //winCall.AddContactWinSize(contactList);
+                                LogManager.SystemLog.Info("End ConfMemberEventCB2");
+                                return;
+                            }
+                            else if (!winCall.IsConf())//修改呼叫三人会议，一人未接，被叫者不是会议状态的bug
+                            {
+                                winCall.Render(contactList);
+                            }
+                        }
+                        UCContact ucFrist = contactList.First((x) => { return StringHelper.GetSubString(x.UserName) == str; });
+                        if (ucFrist != null)
+                        {
+                            if ((_avParam.memStatus == (int)MemStatusInCall.CONF_MEM_DEL || _avParam.memStatus == (int)MemStatusInCall.CONF_MEM_QUIT)
+                                && contactList.FindIndex((x) => { return x.IsLeader == true && StringHelper.GetSubString(x.UserName) == str; }) != -1)
+                            {
+                                //临时注释掉 会议主席离会时，关闭会议的处理，只更新状态
+                                //winCall.CloseCallInThread();
                                 ucFrist.Mute = (MemStatusInCall)_avParam.memStatus;
-                                break;
+                                return;
+                            }
+                            switch (_avParam.memStatus)
+                            {
+                                case (int)MemStatusInCall.CONF_MEM_SPK:
+                                    foreach (UCContact uc1 in contactList)
+                                    {
+                                        uc1.IsSpeaker = false;
+                                    }
+                                    ucFrist.IsSpeaker = true;
+                                    break;
+                                //case (int)MemStatusInCall.CONF_MEM_QUIT:
+                                case (int)MemStatusInCall.CONF_MEM_DEL:
+                                    contactList.Remove(ucFrist);
+                                    winCall.Render(contactList);
+                                    //  winCall.AddContactWinSize(contactList);
+                                    break;
+                                default:
+                                    ucFrist.Mute = (MemStatusInCall)_avParam.memStatus;
+                                    break;
+                            }
                         }
                     }
                 }
                 finally
                 {
-                    LogManager.SystemLog.Info("End ConfMemberEventCB");
+                    LogManager.SystemLog.Info("End ConfMemberEventCB3");
                     LogManager.SystemLog.Info("StartUpdateCallWin Monitor.Exit");
                 }
+                //this.flag1 = true;
             }
         }
         UCContactAvailability GetContactAvailability(int _AccountType, string _Account)
@@ -901,6 +1136,7 @@ namespace LyncWpfApp
         {
             lock (WinCall.lockObject)
             {
+               
                 try
                 {
                     LogManager.SystemLog.Info("InsertCallHistory Monitor.Enter");
@@ -944,6 +1180,7 @@ namespace LyncWpfApp
                     LogManager.SystemLog.Info("InsertCallHistory Monitor.Exit");
                 }
             }
+          
         }
 
         public void InsertConfHistory()
@@ -955,6 +1192,7 @@ namespace LyncWpfApp
         {
             lock (WinCall.lockObject)
             {
+               
                 try
                 {
                     LogManager.SystemLog.Info("InsertConfHistory Monitor.Enter");
@@ -1008,6 +1246,7 @@ namespace LyncWpfApp
                     LogManager.SystemLog.Info("InsertConfHistory Monitor.Exit");
                 }
             }
+           
         }
 
         public void HangupVideoCall()
@@ -1037,13 +1276,14 @@ namespace LyncWpfApp
                         if (reslut == 1)
                         {
                             LogManager.SystemLog.Error("BlindTransCall success");
-                            winCall.OpenDialog("BlindTransCallSucc", "BlindTransCallSucc");
+                            winCall.OpenDialog("BlindTransCallSucc", "success");
                             winCall.CloseWinThread();
                         }
                         else
                         {
                             LogManager.SystemLog.Error("BlindTransCall error");
                             winCall.OpenDialog("BlindTransCallFail", "error");
+                            winCall.lync.setBtn();   //2015/8/18
                         }
                     }
                 }));
@@ -1069,19 +1309,15 @@ namespace LyncWpfApp
                     if (reslut == 0)
                     {
                         LogManager.SystemLog.Error("BlindTransCall success");
-                        winCall.OpenDialogTiming("BlindTransCallSucc", "BlindTransCallSucc",3);
+                        winCall.OpenDialogTiming("BlindTransCallSucc", "success", 2);
                         winCall.CloseWinThread();
                     }
                     else 
                     {
-                        LogManager.SystemLog.Error("BlindTransCall error");
-                        //string message = StringHelper.FindLanguageResource("BlindTransCall error");
-                        //int second = 2;
-                        //TimingMessageBox messageBox = new TimingMessageBox(message, second);
-                        //messageBox.ShowDialog();
-                        winCall.OpenDialogTiming("BlindTransCallFail", "error", 3);
-                        //winCall.OpenDialog("BlindTransCallFail", "error");
-
+                        LogManager.SystemLog.Error("BlindTransCall error");                        
+                        winCall.OpenDialogTiming("BlindTransCallFail", "error", 2);
+                        //转移失败时视频按钮，加人按钮，呼叫保持按钮恢复原状态
+                        winCall.lync.setBtn();   //2015/8/10                     
                     }
                 }
             }));

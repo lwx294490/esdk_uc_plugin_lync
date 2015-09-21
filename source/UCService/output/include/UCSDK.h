@@ -38,12 +38,14 @@ enum EM_UCServiceRetvCode
 enum EM_SignInState
 {
 	UC__SignedFailed		=	1,
+	UC__KickOut		        =	2,
 	UC__SignedIn			=	3
 };
 
 //状态类型
 enum EM_StatusType
 {
+	UC_INit         =   -1,  //初始默认状态
 	UC_Offline		=	0,	//离线
 	UC_Online		=	1,	//在线
 	UC_Hide			=	2,	//隐身
@@ -72,9 +74,10 @@ enum EM_PhoneJointStatusType
 	STATUS_START_FAILED  = 1, //开启联动失败
 	STATUS_STOP_SUCC     = 2, //取消联动成功
 	STATUS_STOP_FAILED   = 3, //取消联动失败
-	STATUS_ONLINE        = 4, //IPPhone在线
+	STATUS_ONLINE        = 4, //IPPhone上线
 	STATUS_OFFLINE       = 5, //IPPhone离线
-	STATUS_OFFHOOK       = 6  //IPPhone摘机
+	STATUS_OFFHOOK       = 6, //IPPhone摘机
+	STATUS_JOINT_OUTGOING = 7  //联动话机呼出
 };
 
 //打开页面的类型
@@ -266,7 +269,16 @@ typedef struct
 {
 	char ucAcc[STRING_LENGTH];
 	int callStatus;			//参考EM_VideoCallStatus的定义
-}STVideoCallParam;		
+}STVideoCallParam;	
+
+//话机联动参数
+typedef struct
+{
+	char CalleeNum[STRING_LENGTH];	//被叫绑定号
+	char CalleeName[STRING_LENGTH];	//被叫名称
+	char ucCalleeAcc[STRING_LENGTH];//被叫UC账户
+	int PJ_Status;			     //参考EM_PhoneJointStatusType的定义
+}PJStatusParam;	
 
 //历史记录
 typedef struct
@@ -339,7 +351,9 @@ typedef enum
 	File_AcceptedNotify,
 	File_ReceivedNotify,
 	File_CancelNotfiy,
-	File_TransProcessNotify
+	File_TransProcessNotify,
+	File_TranceSucess
+
 }File_TransNotifyType;
 
 //文件传输参数
@@ -386,7 +400,7 @@ typedef void (CALLBACK *AVSessionConnectedCB)(void);
 typedef void (CALLBACK *AVSessAddedCB)(const STAudioVideoParam& _avParam);
 typedef void (CALLBACK *ConfMemberEventCB)(const STConfParam& _avParam);
 typedef void (CALLBACK *VideoCallEventCB)(const STVideoCallParam& _callParam);
-typedef void (CALLBACK *PhoneJointEventCB)(int _state);							//_state的取值参考枚举类型EM_PhoneJointStatusType
+typedef void (CALLBACK *PhoneJointEventCB)(const PJStatusParam& _pj);							//_state的取值参考枚举类型EM_PhoneJointStatusType
 typedef void (CALLBACK *CallReservedEventCB)(int type,int reslut);
 typedef void (CALLBACK *IMRecvNotifyCB)(const char* _account,const char* _content);
 typedef void (CALLBACK *FileTransNotifyCB)(const STFileTransParam& _st);

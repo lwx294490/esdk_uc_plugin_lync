@@ -78,8 +78,10 @@ namespace LyncWpfApp
             if (iRet != 0)
             {
                 LogManager.SystemLog.Error(string.Format("UC_SDK_HangupCall = {0}", iRet));
+
             }
             LogManager.SystemLog.Debug(string.Format("End UC_SDK_HangupCall"));
+
         }
         public void SendDTMF(char tone)
         {

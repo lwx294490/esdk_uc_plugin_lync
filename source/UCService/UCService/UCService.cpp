@@ -55,6 +55,9 @@ using namespace ecs::ecsdata;
 #pragma comment(linker, "/EXPORT:UC_SDK_DeleteMemberInCall=_UC_SDK_DeleteMemberInCall@8")
 #pragma comment(linker, "/EXPORT:UC_SDK_ModifyMemberStatusInCall=_UC_SDK_ModifyMemberStatusInCall@12")
 
+//数据会议
+#pragma comment(linker, "/EXPORT:UC_SDK_TransCallToMultiMediaConf=_UC_SDK_TransCallToMultiMediaConf@0")
+
 //设备管理
 #pragma comment(linker, "/EXPORT:UC_SDK_MuteMic=_UC_SDK_MuteMic@0")
 #pragma comment(linker, "/EXPORT:UC_SDK_UnMuteMic=_UC_SDK_UnMuteMic@0")
@@ -239,10 +242,16 @@ int __UC_SDK_CALL UC_SDK_AddCallMember(int _memberType,const char* _member)
 		return UC_SDK_InvalidPara;
 	}
 	INFO_LOG("_member=%s,_memberType=%d",_member,_memberType);
+	std::string m_member = _member;
+	if (TUP_FALSE == eSDKTool::IsTextUtf8(_member,strlen(_member)))
+	{
+		INFO_LOG("Unicode str");
+		m_member = eSDKTool::unicodestr2utf8(_member);
+	}
 
 	if(UC_ACCOUNT == _memberType)
 	{
-		std::string strAccount = _member;
+		std::string strAccount = m_member;
 		IM_S_USERINFO user;
 		if(UC_SDK_Success != UCContactMgr::Instance().getContactByAccount(strAccount,user))
 		{
@@ -256,7 +265,7 @@ int __UC_SDK_CALL UC_SDK_AddCallMember(int _memberType,const char* _member)
 	}
 	else if (UC_IPPHONE == _memberType)
 	{
-		std::string phone = _member;
+		std::string phone = m_member;
 		(void)UCCallMgr::Instance().InsertPhoneMember(phone);
 		return UC_SDK_Success;
 	}
@@ -292,9 +301,12 @@ int __UC_SDK_CALL UC_SDK_GetUCAccount(const char* phoneNum,char _UCAcc[STRING_LE
 		}		
 	}
 
-	strcpy_s(_UCAcc,STRING_LENGTH,user.account);
-	int iRet = UC_SDK_Success;
-	return iRet;
+	memset(_UCAcc,0,STRING_LENGTH);
+//	strcpy_s(_UCAcc,STRING_LENGTH,user.account);
+	memset(_UCAcc,0,STRING_LENGTH);
+	std::string unicoduri = eSDKTool::utf8str2unicodestr(user.account);
+	memcpy_s(_UCAcc,STRING_LENGTH,unicoduri.c_str(),unicoduri.size());
+	return UC_SDK_Success;
 
 }
 
@@ -1090,7 +1102,7 @@ int __UC_SDK_CALL UC_SDK_SetConfMemEventCallBack(ConfMemberEventCB confMemEventC
 		return UC_SDK_InvalidPara;
 	}
 
-	return UCConfMgr::Instance().SetConfMemEventCB(confMemEventCallBack);
+	return  UCConfMgr::Instance().SetConfMemEventCB(confMemEventCallBack);
 
 }
 
@@ -1313,7 +1325,6 @@ int __UC_SDK_CALL UC_SDK_InsertConvHistoryPart(const char* _historyConvID,const 
 	{
 		ERROR_LOG("partName size is 0.");
 		return UC_SDK_InvalidPara;
-
 	}
 
 	INFO_LOG("_historyConvID=%s,_partAccount=%s,_partName=%s",_historyConvID,_partAccount,_partName);
@@ -1471,6 +1482,12 @@ int __UC_SDK_CALL UC_SDK_GetContactInfo(const char* _Account,STContact* _pContac
 	INFO_LOG("_Account=%s",_Account);
 
 	std::string strAccount(_Account);
+
+	if (TUP_FALSE == eSDKTool::IsTextUtf8(_Account,strlen(_Account)))
+	{
+		INFO_LOG("Unicode str");
+		strAccount = eSDKTool::unicodestr2utf8(strAccount);
+	}
 	return UCRegMgr::Instance().GetContactInfo(strAccount,*_pContactInfo);
 }
 
@@ -1627,7 +1644,7 @@ int __UC_SDK_CALL UC_SDK_SendIM(const char* _account,const char* _IMContent)
 		ERROR_LOG("_IMContent is null pointer.");
 		return UC_SDK_InvalidPara;
 	}
-	INFO_LOG("_account=%s",_account);
+	INFO_LOG("_account=%s",_account); 
 
 	if(0 == strlen(_account))
 	{
@@ -1700,11 +1717,11 @@ int __UC_SDK_CALL UC_SDK_TransFile(const char* _account,const char* _filePath,ch
 
 }
 
-int __UC_SDK_CALL UC_SDK_AcceptFile(const char* _ConvID,const char* _TranID,const char* _FileSavePath)
+int __UC_SDK_CALL UC_SDK_AcceptFile(const char* _account,const char* _TranID,const char* _FileSavePath)
 {
 	INFO_TRACE("");
 	CHECK_INIT_RETURN(isInit,UC_SDK_NotInit);
-	if (NULL == _ConvID)
+	if (NULL == _account)
 	{
 		ERROR_LOG("_ConvID is null pointer.");
 		return UC_SDK_InvalidPara;
@@ -1719,47 +1736,46 @@ int __UC_SDK_CALL UC_SDK_AcceptFile(const char* _ConvID,const char* _TranID,cons
 		ERROR_LOG("_FileSavePath is null pointer.");
 		return UC_SDK_InvalidPara;
 	}
-	INFO_LOG("_ConvID=%s,_TranID=%s,_FileSavePath=%s",_ConvID,_TranID,_FileSavePath);
+	INFO_LOG("_ConvID=%s,_TranID=%s,_FileSavePath=%s",_account,_TranID,_FileSavePath);
 
-	return UCIMMgr::Instance().AcceptFile(_ConvID,_TranID,_FileSavePath);
+	return UCIMMgr::Instance().AcceptFile(_account,_TranID,_FileSavePath);
 
 }
 
-int __UC_SDK_CALL UC_SDK_CancelFile(const char* _ConvID,const char* _TranID)
+int __UC_SDK_CALL UC_SDK_CancelFile(const char* _account,const char* _filepath)
 {
 	INFO_TRACE("");
 	CHECK_INIT_RETURN(isInit,UC_SDK_NotInit);
-	if (NULL == _ConvID)
+	if (NULL == _account)
 	{
 		ERROR_LOG("_ConvID is null pointer.");
 		return UC_SDK_InvalidPara;
 	}
-	if (NULL == _TranID)
+	if (NULL == _filepath)
 	{
 		ERROR_LOG("_TranID is null pointer.");
 		return UC_SDK_InvalidPara;
 	}
-	INFO_LOG("_ConvID=%s,_TranID=%s",_ConvID,_TranID);
-	return UCIMMgr::Instance().CancelFile(_ConvID,_TranID);
+	INFO_LOG("_ConvID=%s,_TranID=%s",_account,_filepath);
+	return UCIMMgr::Instance().CancelFile(_account,_filepath);
 }
 
-int __UC_SDK_CALL UC_SDK_RejectFile(const char* _ConvID,const char* _TranID)
+int __UC_SDK_CALL UC_SDK_RejectFile(const char* _account,const char* _filepath)
 {
 	INFO_TRACE("");
 	CHECK_INIT_RETURN(isInit,UC_SDK_NotInit);
-	if (NULL == _ConvID)
+	if (NULL == _account)
 	{
 		ERROR_LOG("_ConvID is null pointer.");
 		return UC_SDK_InvalidPara;
 	}
-	if (NULL == _TranID)
+	if (NULL == _filepath)
 	{
 		ERROR_LOG("_TranID is null pointer.");
 		return UC_SDK_InvalidPara;
 	}
-	INFO_LOG(_ConvID,_TranID);
 
-	return UCIMMgr::Instance().RejectFile(_ConvID,_TranID);
+	return UCIMMgr::Instance().RejectFile(_account,_filepath);
 
 }
 
@@ -1777,3 +1793,13 @@ int __UC_SDK_CALL UC_SDK_RejectFile(const char* _ConvID,const char* _TranID)
 	 return UCCallMgr::Instance().SetCallTransEventCB(CallTransCallBack);
 
  }
+
+ int __UC_SDK_CALL UC_SDK_TransCallToMultiMediaConf()
+ {
+	 INFO_TRACE("");
+	 CHECK_INIT_RETURN(isInit,UC_SDK_NotInit);
+	 //////增加API接口，拉起eSpace的meeting模块///////
+	 return 1;
+
+ }
+ 

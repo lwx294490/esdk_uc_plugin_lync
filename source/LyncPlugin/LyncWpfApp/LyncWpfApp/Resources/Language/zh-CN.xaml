@@ -56,6 +56,7 @@
 
     <sys:String x:Key="Chinese">简体中文</sys:String>
     <sys:String x:Key="English">English</sys:String>
+    <sys:String x:Key="BR">葡萄牙语</sys:String>
     <sys:String x:Key="ReStart">开机自动启动UC</sys:String>
     <sys:String x:Key="Microphone">:麦克风</sys:String>
     <sys:String x:Key="Speaker">:扬声器</sys:String>
@@ -90,7 +91,7 @@
     <sys:String x:Key="PreviousPage">前一页</sys:String>
     <sys:String x:Key="GO">跳转</sys:String>
     <sys:String x:Key="NextPage">下一页</sys:String>
-    <sys:String x:Key="LastPage">LastPage</sys:String>
+    <sys:String x:Key="LastPage">最后一页</sys:String>
 
 
     <sys:String x:Key="MuteUnmute">静音/取消静音</sys:String>
@@ -141,11 +142,11 @@
     <sys:String x:Key="NoSupportVideo">当前处于话机联动状态，不支持视频呼叫</sys:String>
 
     <sys:String x:Key="Disable">关闭</sys:String>
-    <sys:String x:Key="CallForwardType">呼叫前传</sys:String>
-    <sys:String x:Key="CallForwardUnCond">无条件呼叫前传</sys:String>
-    <sys:String x:Key="CallForwardNoReply">无应答呼叫前传</sys:String>
-    <sys:String x:Key="CallForwardBusy">遇忙呼叫前传</sys:String>
-    <sys:String x:Key="CallForwardOffline">离线呼叫前传</sys:String>
+    <sys:String x:Key="CallForwardType">呼叫前转</sys:String>
+    <sys:String x:Key="CallForwardUnCond">无条件呼叫前转</sys:String>
+    <sys:String x:Key="CallForwardNoReply">无应答呼叫前转</sys:String>
+    <sys:String x:Key="CallForwardBusy">遇忙呼叫前转</sys:String>
+    <sys:String x:Key="CallForwardOffline">离线呼叫前转</sys:String>
     <sys:String x:Key="CallForwardOnDND">DND 前转</sys:String>
 
     <sys:String x:Key="NoMoblePhone">用户没有可转移的电话</sys:String>
@@ -157,12 +158,12 @@
     <sys:String x:Key="CancelFWDFailed">取消呼叫前转失败</sys:String>
 
     <sys:String x:Key="PhoneNumberNullError">电话号码不能为空</sys:String>
-    <sys:String x:Key="youareincallalready">不能同时拨打两个电话</sys:String>
-
+    <sys:String x:Key="Youareincallalready">不能同时拨打两个电话</sys:String>
+    <sys:String x:Key="Invalidnum">您输入的号码有误</sys:String>
 
     <!--add by jinyeqing-->
     <sys:String x:Key="Mail">语音邮箱</sys:String>
-    <sys:String x:Key="VoiceForwardType">语音邮箱前传</sys:String>
+    <sys:String x:Key="VoiceForwardType">语音邮箱前转</sys:String>
     <sys:String x:Key="VoiceForwardUnCond">无条件转语音邮箱</sys:String>
     <sys:String x:Key="VoiceForwardNoReply">无应答转语音邮箱</sys:String>
     <sys:String x:Key="VoiceForwardBusy">遇忙转语音邮箱</sys:String>
@@ -185,16 +186,29 @@
     <sys:String x:Key="startContextCallFailed">创建通话失败</sys:String>
     <sys:String x:Key="PleaseLoginUCagain">请重新登陆UC</sys:String>
     <sys:String x:Key="somanypeople">最多20人参与会议</sys:String>
-    <sys:String x:Key="theconferencehassameperson">不能有相同的人入会</sys:String>
+    <sys:String x:Key="theconferencehassameperson">已经在会议中</sys:String>
     <sys:String x:Key="NoSuchUCAccount">没有该UC用户</sys:String>
     <sys:String x:Key="ConAnswer">接入会议</sys:String>
+    <sys:String x:Key="Cannotdothisincall">通话时不能更改联动状态</sys:String>
+    <sys:String x:Key="CannotchangeFWDincall">通话时不能更改前转状态</sys:String>
+    <sys:String x:Key="Cannotchangemailincall">通话时不能更改语音邮箱设置</sys:String>
+    <sys:String x:Key="PleaseAddOneAccountFirst">请至少选择一个账号</sys:String>
+    <sys:String x:Key="Cannottansfer">不能转移到自己或对方的号码上</sys:String>
+    <sys:String x:Key="StatusOffline">话机下线</sys:String>
+    <sys:String x:Key="Statusonline">话机上线</sys:String>
+    <sys:String x:Key="NoVoicemail">没有语音邮箱</sys:String>
+    <sys:String x:Key="Success">成功</sys:String>
+    <sys:String x:Key="MailNumberNullError">语音邮箱号码不能为空</sys:String>
+    <sys:String x:Key="Cannottransfer">您已设置无条件前转</sys:String>
+    <sys:String x:Key="theNumisExist">您输入的号码已存在</sys:String>
+    <sys:String x:Key="theNameisExist">您输入的账号已存在</sys:String>
     <!--add by jinyeqing-->
     <sys:String x:Key="BlindTransCall">呼叫转移</sys:String>
     <sys:String x:Key="BlindTransCallSucc">呼叫转移成功</sys:String>
     <sys:String x:Key="BlindTransCallFail">呼叫转移失败</sys:String>
 
-    <sys:String x:Key="FWDMailSuccess">语音信箱转移成功</sys:String>
-    <sys:String x:Key="FWDMailFail">语音信箱转移失败</sys:String>
+    <sys:String x:Key="FWDMailSuccess">设置语音信箱转移成功</sys:String>
+    <sys:String x:Key="FWDMailFail">设置语音信箱转移失败</sys:String>
 
     <sys:String x:Key="CancelFWDMailSuccess">取消语音信箱转移成功</sys:String>
     <sys:String x:Key="CancelFWDMailFail">取消语音信箱转移失败</sys:String>

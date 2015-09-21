@@ -2,6 +2,8 @@
 #include "objbase.h"
 #include "eSDKTool.h"
 #include <io.h>
+#include "Log.h"
+#include "UCConfigMgr.h"
 
 
 eSDKTool::eSDKTool(void)
@@ -178,6 +180,25 @@ std::string eSDKTool::utf8str2unicodestr(const std::string& utf_str)
 	std::string str(pChar);
 	delete[] pChar;
 	return  str;
+}
+std::wstring eSDKTool::ansiToUnicode(const std::string _ansic)
+{
+	int len = ::MultiByteToWideChar(CP_ACP, 0, _ansic.c_str(), -1, NULL, 0);  
+	wchar_t *pUnicode = new wchar_t[len + 1]; 
+	memset(pUnicode,0,(len +1)*sizeof(wchar_t));  
+    ::MultiByteToWideChar(CP_ACP, 0, _ansic.c_str(), -1, (LPWSTR)pUnicode, len);  
+	std::wstring  rt;  
+	rt = ( wchar_t* )pUnicode;
+	std::wstring cstr = rt.c_str();
+	delete  pUnicode; 
+	return cstr; 
+
+}
+std::string eSDKTool::unicodestr2utf8(const std::string& utf_str)
+{
+	std::wstring  strOut = ansiToUnicode(utf_str);
+	std::string  m_desc = unicode2utf8(strOut);
+	return m_desc;
 }
 
 std::string eSDKTool::unicode2utf8(const std::wstring & wstr)
@@ -386,12 +407,14 @@ TUP_INT64 eSDKTool::GetCurUTCTime()
 
 bool eSDKTool::GetBestHostip(std::string& ip, const std::string& serverip)
 {
+	INFO_LOG("Enter GetBestHostip");
 	DWORD destAddr = inet_addr(serverip.c_str());
 
 	MIB_IPFORWARDROW bestRoute;
 	memset(&bestRoute, 0, sizeof(bestRoute));
 	if (NO_ERROR != GetBestRoute((DWORD)destAddr, 0, &bestRoute))
 	{
+		ERROR_LOG("GetBestRoute Failed");
 		return false;
 	}
 
@@ -399,6 +422,7 @@ bool eSDKTool::GetBestHostip(std::string& ip, const std::string& serverip)
 	PMIB_IPADDRTABLE pIPAddrTable = (MIB_IPADDRTABLE*)&buf;
 	if ( !pIPAddrTable )
 	{
+		ERROR_LOG("pIPAddrTable is NULL");
 		return false;
 	}
 
@@ -409,6 +433,7 @@ bool eSDKTool::GetBestHostip(std::string& ip, const std::string& serverip)
 	{
 		if ( !pIPAddrTable )
 		{
+			ERROR_LOG("GetIpAddrTable Get pIPAddrTable  Failed");
 			return false;
 		}
 	}
@@ -421,22 +446,51 @@ bool eSDKTool::GetBestHostip(std::string& ip, const std::string& serverip)
 	DWORD dwRetVal;
 	if ( (dwRetVal = GetIpAddrTable( pIPAddrTable, &dwSize, 0 )) != NO_ERROR ) 
 	{ 
+		ERROR_LOG("GetIpAddrTable Get dwRetVal  Failed");
 		return false;
 	}
 
 	bool ret = false;
 	for (DWORD i=0; i<pIPAddrTable->dwNumEntries; ++i)
 	{
+		INFO_LOG("dwNumEntries is %d",pIPAddrTable->dwNumEntries);
 		const MIB_IPADDRROW& entry = pIPAddrTable->table[i];
+		char * ipaddr1 = NULL;
+		const unsigned IPLENGTH = 20;//ip 字符串长度
+		char addr1[IPLENGTH]={0};
+		in_addr inaddr1;
+		inaddr1.s_addr=entry.dwAddr;
+		ipaddr1 = inet_ntoa(inaddr1);
+		strcpy_s(addr1,IPLENGTH,ipaddr1); 
+		INFO_LOG("entry.dwAddr is %s",addr1);
+		INFO_LOG("entry.dwAddr is %d",entry.dwAddr);
+		INFO_LOG("entry.dwIndex is %d",entry.dwIndex);
+		INFO_LOG("entry.dwMask is %lu",entry.dwMask);
+		INFO_LOG("entry.dwBCastAddr is %d",entry.dwBCastAddr);
+		INFO_LOG("entry.dwReasmSize is %d",entry.dwReasmSize);
+		INFO_LOG("entry.unused1 is %d",entry.unused1);
+		INFO_LOG("entry.wType is %d",entry.wType);
+		INFO_LOG("bestRoute.dwForwardIfIndex is %d",bestRoute.dwForwardIfIndex);
 		if (entry.dwIndex == bestRoute.dwForwardIfIndex)
 		{
+			INFO_LOG("entry.dwIndex == bestRoute.dwForwardIfIndex");
 			bool found = false;
-			if (0 == bestRoute.dwForwardNextHop)
-				found = (entry.dwAddr&bestRoute.dwForwardMask) == (bestRoute.dwForwardDest&bestRoute.dwForwardMask);
+			INFO_LOG("bestRoute.dwForwardNextHo is %d",bestRoute.dwForwardNextHop);
+			if (entry.dwMask <= 0 || entry.dwMask  >= (unsigned long)255*255*255*255)
+			{
+				//////子网掩码不存在默认此种情况下是拨号方式//////
+				found = true;
+			} 
 			else
-				found = (entry.dwAddr&entry.dwMask) == (bestRoute.dwForwardNextHop&entry.dwMask);
+			{
+				if (0 == bestRoute.dwForwardNextHop)
+					found = (entry.dwAddr&bestRoute.dwForwardMask) == (bestRoute.dwForwardDest&bestRoute.dwForwardMask);
+				else
+					found = (entry.dwAddr&entry.dwMask) == (bestRoute.dwForwardNextHop&entry.dwMask);
+			}
 			if (found)
 			{
+				INFO_LOG("found is true");
 				char * ipaddr = NULL;
 				const unsigned IPLENGTH = 20;//ip 字符串长度
 				char addr[IPLENGTH]={0};
@@ -446,6 +500,7 @@ bool eSDKTool::GetBestHostip(std::string& ip, const std::string& serverip)
 				strcpy_s(addr,IPLENGTH,ipaddr);  
 				if (strcmp(addr,"0.0.0.0") !=0  && strcmp(addr,"127.0.0.1") !=0)
 				{
+					INFO_LOG("(strcmp !=0  && strcmp !=0)");
 					ip = addr;
 					ret = true;
 				}
@@ -454,5 +509,50 @@ bool eSDKTool::GetBestHostip(std::string& ip, const std::string& serverip)
 	}
 
 	delete[] strTable;
+	INFO_LOG("Leave GetBestHostip");
 	return ret;
 }
+
+bool eSDKTool::IsTextUtf8(const char* str,ULONGLONG length)  
+{  
+   DWORD nBytes=0;//UFT8可用1-6个字节编码,ASCII用一个字节   
+   UCHAR chr;  
+   BOOL bAllAscii=TRUE; //如果全部都是ASCII, 说明不是UTF-8   
+   for(int i=0; i<length; ++i)  
+	    {
+		    chr= *(str+i);  
+		    if( (chr&0x80) != 0 ) // 判断是否ASCII编码,如果不是,说明有可能是UTF-8,ASCII用7位编码,但用一个字节存,最高位标记为0,o0xxxxxxx   
+			 bAllAscii= FALSE;
+			if(nBytes==0) //如果不是ASCII码,应该是多字节符,计算字节数   
+			  {  
+			     if(chr>=0x80)  
+				 {  
+	                if(chr>=0xFC&&chr<=0xFD)  
+		                    nBytes=6;  
+	                else if(chr>=0xF8)  
+		                    nBytes=5;  
+	                else if(chr>=0xF0)  
+		                    nBytes=4;  
+	                else if(chr>=0xE0)  
+		                    nBytes=3;  
+	                else if(chr>=0xC0)  
+		                    nBytes=2;  
+	                else  
+		                  return FALSE;  
+		                nBytes--;  
+					 }  
+				}  
+			else //多字节符的非首字节,应为 10xxxxxx   
+				 {  
+		            if( (chr&0xC0) != 0x80 )  
+			              return FALSE;  
+			            nBytes--;  
+			     }  
+			 }  
+	    if( nBytes > 0 ) //违返规则   
+		      return FALSE;  
+	    if( bAllAscii ) //如果全部都是ASCII, 说明不是UTF-8   
+		      return FALSE;  
+		return TRUE;  
+}
+

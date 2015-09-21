@@ -59,6 +59,13 @@ bool UCGroupEvent::DoHandle(void)
 
 			
 			TUP_S_LIST* list =  ack.memberInfo;
+			//////查询群组UC成员状态//////
+			tRet = tup_im_detectuserstatus(list);
+			if (TUP_SUCCESS != tRet)
+			{
+				INFO_LOG("tup_im_detectuserstatus Failed");
+			}
+			/////上报成员情况//////
 			while(list != NULL)
 			{
 				IM_S_GroupUserInfo* groupUser = (IM_S_GroupUserInfo*)list->data;
@@ -66,15 +73,15 @@ bool UCGroupEvent::DoHandle(void)
 				{
 					STConfParam item;
 					std::string strAccount = groupUser->userInfo.account;
-					INFO_LOG("----GroupID:%s,GroupMember:%s",m_strGroupID.c_str(),strAccount.c_str());
 					if(strAccount.empty())
 					{
 						ERROR_LOG("----strAccount is empty");
 					}
 					else
-					{		
+					{
 						if(!UCGroupMgr::Instance().IsInGroupUCMember(m_strGroupID,strAccount))
 						{
+							INFO_LOG("----GroupID:%s,GroupMember:%s",m_strGroupID.c_str(),strAccount.c_str());
 							item.memStatus = CONF_MEM_ADD;
 							item.memType = UC_ACCOUNT;
 							strcpy_s(item.ucAcc,STRING_LENGTH,strAccount.c_str());
@@ -103,10 +110,12 @@ bool UCGroupEvent::DoHandle(void)
 				{
 					std::string strphone = *phoneit;
 					strcpy_s(item.ucAcc,STRING_LENGTH,strphone.c_str());
-					if(m_strGroupID == strCurGroupID)
+					////GroupID 是当前的GroupID并且phone账户是新加入的账户，上报状态  Start//////
+					if(m_strGroupID == strCurGroupID&&(! UCGroupMgr::Instance().IsInGroupPhoneMember(m_strGroupID,strphone)))
 					{
 						UCConfMgr::Instance().NotifyConfUI(item);
 					}
+					////GroupID 是当前的GroupID并且phone账户是新加入的账户，上报状态  End//////
 				}
 			}
 			
@@ -134,8 +143,7 @@ bool UCGroupEvent::DoHandle(void)
 						UCConfMgr::Instance().NotifyConfUI(item);
 					}
 				}
-
-				TUP_S_LIST* temppPhone = pPhone;
+		        TUP_S_LIST* temppPhone = pPhone;
 				pPhone = pPhone->next;	
 				SAFE_DELETE(temppPhone);
 				SAFE_DELETE(pNum);							

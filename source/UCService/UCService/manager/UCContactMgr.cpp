@@ -154,22 +154,25 @@ int UCContactMgr::getContactList(const std::string& _strSearchKey, int _fromInde
 	}
 
 	int iQuerySize = _toIndex - _fromIndex + 1;
+	INFO_LOG("iQuerySize is %d",iQuerySize);
+
 	if(iQuerySize > SEARCH_MAXAMOUNT)
 	{
 		ERROR_LOG("QuerySize is invalid.");
 		return UC_SDK_InvalidPara;
 	}
 
-	IM_S_QUERY_ENTADDRESSBOOK_ARG arg;
+	IM_S_QUERY_ENTADDRESSBOOK_ARG arg = {0};
 	arg.deptID = -1;
+
 	strcpy_s(arg.queryKey,IM_D_MAX_DESC_LENGTH,_strSearchKey.c_str());
-	arg.offset = 0;
+	arg.offset = _fromIndex;
 	arg.orderModel = IM_E_ADDRBOOKQUERY_ORDERMODEL_BY_ASC;
 	arg.orderType = IM_E_ADDRBOOKQUERY_ORDERTYPE_BY_STAFFNO;
 	arg.isNeedAmount = TUP_TRUE;
 	arg.count = iQuerySize;
 	
-	IM_S_QUERY_ENTADDRESSBOOK_ACK entAck;
+	IM_S_QUERY_ENTADDRESSBOOK_ACK entAck = {0} ;
 	TUP_RESULT tRet = tup_im_queryentaddressbook(&arg,&entAck);
 	if(TUP_SUCCESS != tRet || entAck.result == TUP_FALSE)
 	{
@@ -179,6 +182,7 @@ int UCContactMgr::getContactList(const std::string& _strSearchKey, int _fromInde
 
 	m_mapStaff.clear();
 	m_iStaffSize = entAck.recordAmount;
+	INFO_LOG("m_iStaffSize is %d",m_iStaffSize);
 	TUP_S_LIST* pUserItem = entAck.userList;
 	int i = 0;
 	while(NULL != pUserItem)
@@ -193,6 +197,7 @@ int UCContactMgr::getContactList(const std::string& _strSearchKey, int _fromInde
 		m_mapStaff[i++]=user;
 		pUserItem = pUserItem->next;
 	}
+	SAFE_DELETE(pUserItem);
 
 	if(_fromIndex>m_iStaffSize)
 	{
@@ -212,18 +217,17 @@ int UCContactMgr::getContactList(const std::string& _strSearchKey, int _fromInde
 	}
 
 	const int legth = iRealSize-_fromIndex;
+	INFO_LOG("legth is %d",legth);
 	const int staffSize = m_mapStaff.size();
-	for(int i=0;i<legth && i<staffSize;i++)
+	INFO_LOG("staffSize is %d",staffSize);
+	for(int i=0;(i<legth) &&(i<staffSize) ;i++)
 	{
 		IM_S_USERINFO cont = m_mapStaff[i];
 
 		memset(_pContactList->stContact[i].address_,0,STRING_LENGTH);
-		//std::string unicodeAddr = eSDKTool::utf82unicode(cont.address);
 		memcpy_s(_pContactList->stContact[i].address_,STRING_LENGTH,cont.address,STRING_LENGTH-1);
 
 		memset(_pContactList->stContact[i].avtool_,0,STRING_LENGTH);
-		//memcpy_s(_pContactList->stContact[i].avtool_,cont..c_str(),cont.avtool_.size());
-
 		memset(_pContactList->stContact[i].corpName_,0,STRING_LENGTH);
 		//std::string unicodeCorpName = eSDKTool::utf82unicode(cont.);
 		//memcpy_s(_pContactList->stContact[i].corpName_,unicodeCorpName.c_str(),unicodeCorpName.size());
@@ -321,7 +325,8 @@ int UCContactMgr::getContactList(const std::string& _strSearchKey, int _fromInde
 		memcpy_s(_pContactList->stContact[i].ucAcc_,STRING_LENGTH,cont.account,strlen(cont.account));
 
 		memset(_pContactList->stContact[i].uri_,0,STRING_LENGTH);
-		memcpy_s(_pContactList->stContact[i].uri_,STRING_LENGTH,cont.account,strlen(cont.account));
+		std::string unicoduri = eSDKTool::utf8str2unicodestr(cont.account);
+		memcpy_s(_pContactList->stContact[i].uri_,STRING_LENGTH,unicoduri.c_str(),unicoduri.size());
 
 		memset(_pContactList->stContact[i].webSite_,0,STRING_LENGTH);
 		memcpy_s(_pContactList->stContact[i].webSite_,STRING_LENGTH,cont.webSite,STRING_LENGTH-1);
@@ -330,7 +335,7 @@ int UCContactMgr::getContactList(const std::string& _strSearchKey, int _fromInde
 		memcpy_s(_pContactList->stContact[i].zip_,STRING_LENGTH,cont.postalcode,STRING_LENGTH-1);
 	}
 
-	INFO_LOG("TotalSize=%d,",_pContactList->iTotal);
+	INFO_LOG("TotalSize=%d,",_pContactList->iTotal);  
 
 	return UC_SDK_Success;
 }

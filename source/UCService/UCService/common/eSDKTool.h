@@ -91,8 +91,10 @@ public:
 	static std::string CreateGuidStr();
 
 	static std::wstring utf82unicode(const std::string& utf_str);
+	static std::wstring ansiToUnicode(const std::string _ansic);
 	static std::string unicode2utf8(const std::wstring & uni_str);
 	static std::string utf8str2unicodestr(const std::string& utf_str);
+	static std::string unicodestr2utf8(const std::string& utf_str);  //////界面上传下来的unicode字符//////
 
 	static void GetNumStringFromCmd(const std::string& _spker, std::string& _spkeNum0, std::string& _spkeNum1);
 	static bool CheckString(const std::string strNum1,const std::string& strNum2,std::string& strNum3);//查看strNum2的前面的几个字符串是不是strNum1，是则返回true
@@ -119,6 +121,7 @@ public:
 	static TUP_INT64 GetCurUTCTime();
 
 	static bool GetBestHostip(std::string& ip, const std::string& serverip);
+	static bool IsTextUtf8(const char* str,ULONGLONG length);
 
 private:
 	static std::wstring s_modulePathW;

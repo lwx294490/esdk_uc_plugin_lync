@@ -116,6 +116,7 @@ namespace LyncWpfApp
 
         private void imgGo_MouseLeftButtonUp(object sender, RoutedEventArgs e)
         {
+
             if (tabControlHistory.SelectedIndex == 0)
             {
                 model.QueryHistoryByPage(tabControlCall.SelectedIndex, Convert.ToInt32(txtPage.Text) - 1);
@@ -158,7 +159,7 @@ namespace LyncWpfApp
         }
         private void txtNumber_KeyDown(object sender, KeyEventArgs e)
         {
-            if (!((e.Key >= Key.D1 && e.Key <= Key.D9) || (e.Key >= Key.NumPad1 && e.Key <= Key.NumPad9)))
+            if (!((e.Key >= Key.D0 && e.Key <= Key.D9) || (e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9)))  //之前是e.Key >= Key.NumPad1  e.Key >= Key.D1   2015/8/14
             {
                 e.Handled = true;
             }
@@ -173,10 +174,12 @@ namespace LyncWpfApp
             {
                 textBox.Text = "1";
             }
-            if (Convert.ToInt32(textBox.Text) > total)
+            if (this.IsValidPhoneNumber(str) == false)
             {
-                textBox.Text = total.ToString();
-            }
+                DialogShow.Show(StringHelper.FindLanguageResource("Invalidnum"), StringHelper.FindLanguageResource("error"), 2);
+                textBox.Text = "1";
+                return;
+            }          
             TextChange[] change = new TextChange[e.Changes.Count];
             e.Changes.CopyTo(change, 0);
 
@@ -189,6 +192,10 @@ namespace LyncWpfApp
                     textBox.Text = textBox.Text.Remove(offset, change[0].AddedLength);
                     textBox.Select(offset, 0);
                 }
+            }
+            if (Convert.ToInt32(textBox.Text.Trim().Replace(" ", "")) > total)
+            {
+                textBox.Text = total.ToString();
             }
         }
 
@@ -207,7 +214,7 @@ namespace LyncWpfApp
         {
             if (Lync.winCall != null)
             {
-                DialogShow.Show(StringHelper.FindLanguageResource("Youareincallalready"), StringHelper.FindLanguageResource("error"), 2);
+                DialogShow.Show(StringHelper.FindLanguageResource("Youareincallalready"), StringHelper.FindLanguageResource("error"), 2);  //不能同时发起两路通话
                 return;
             }
             List<CallItem> list = new List<CallItem>();
@@ -258,8 +265,12 @@ namespace LyncWpfApp
             {
                 str = item.Phone;
             }
-            call.insertMember((int)type, new StringBuilder(str));
-           // call.startContextCall();
+            //2015/8/24    UNICODE  转码   UTF8 
+            //byte[] buffer1 = Encoding.UTF8.GetBytes(str.Trim().Replace(" ",""));
+            //byte[] buffer2 = Encoding.Convert(Encoding.Unicode, Encoding.UTF8, buffer1, 0, buffer1.Length);
+            //string item1 = Encoding.UTF8.GetString(buffer2,0, buffer2.Length);
+            //call.insertMember((int)type, new StringBuilder(item1));       
+            call.insertMember((int)type, new StringBuilder(str));          
             if (call.startContextCall() == 0)
             {
                 str = SingletonObj.LoginInfo.LyncName + ";" + str;
@@ -307,6 +318,35 @@ namespace LyncWpfApp
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        /// <summary>
+        /// 校验是否为纯数字
+        /// werther the number is right or not 
+        /// </summary>
+        /// <param name="dialContent"></param>
+        public bool IsValidPhoneNumber(string phoneNumber)
+        {
+            if (string.IsNullOrEmpty(phoneNumber))
+            {
+                return false;
+            }
+
+            phoneNumber = phoneNumber.Trim();
+
+            foreach (char ch in phoneNumber)
+            {
+                if ((ch >= '0' && ch <= '9') || ch == '*' || ch == '#')
+                {
+                    continue;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

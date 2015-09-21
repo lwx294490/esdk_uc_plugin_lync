@@ -77,10 +77,12 @@ namespace LyncWpfApp
             //二次拨号
             MakeCallBusiness call = new MakeCallBusiness();
             string str =(((sender as Button).Content as StackPanel).Children[0] as Image).Tag.ToString();
-            txtNumber.Text += str;
+            txtNumber.Text += str;            
             call.SendDTMF(Convert.ToChar(str));
+            txtNumber.Focus();
+            txtNumber.Select(txtNumber.Text.Length, 0);
         }
-     
+
         private void txtNumber_TextChanged(object sender, TextChangedEventArgs e)
         {
             var textBox = sender as TextBox;
@@ -92,11 +94,16 @@ namespace LyncWpfApp
             {
                 double num = 0;
                 string str = textBox.Text.Replace("*", "").Replace("#", "");
+
                 if (!Double.TryParse(str, out num) && str != "")
                 {
                     textBox.Text = textBox.Text.Remove(offset, change[0].AddedLength);
                     textBox.Select(offset, 0);
                 }
+
+                txtNumber.ToolTip = textBox.Text;
+
+
             }
         }
     }

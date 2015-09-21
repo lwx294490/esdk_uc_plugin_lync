@@ -47,7 +47,7 @@ echo －－－－－ 拷贝安装文件 －－－－－－－－－－
 	set   	DateTime=%Year%-%Month%-%Day%-%Hour%-%Minute%	
 	set	WinRarRoot=C:\Program Files\WinRAR
 	set	ProjectPath=%cd%
-	set	Version=V1.3.30
+	set	Version=V1.5.30
 
 	mkdir .\build\%DateTime%
     xcopy  /y/i/r/s .\LyncWpfApp\LyncSetUp\Release\LyncPluginSetup.msi .\build\%DateTime%

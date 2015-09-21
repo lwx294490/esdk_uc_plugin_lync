@@ -20,8 +20,9 @@ UCRegMgr::UCRegMgr(void):m_strSipAccount("")
 						,m_strLoginAccount("")
 						,m_strBindNO("")
 						,m_bLoginFlag(false)
-						,m_iSelfStatus(UC_Offline)
+						,m_iSelfStatus(UC_INit)
 						,m_bLogOutFlag(false)
+						,m_strLocalIP("")
 {
 }
 
@@ -67,13 +68,12 @@ int UCRegMgr::SignInByPWD(const std::string& _account
 		return UC_SDK_Failed;
 	}
 
-	std::string localip;
-	if(!eSDKTool::GetBestHostip(localip,strIP))
+	if(!eSDKTool::GetBestHostip(m_strLocalIP,strIP))
 	{
 		ERROR_LOG("GetBestHostip failed.");
 		return UC_SDK_Failed;
 	}
-    INFO_LOG("localip=%s",localip.c_str());
+    INFO_LOG("localip=%s",m_strLocalIP.c_str());
 	tRet = tup_im_register_callback(CNotifyCallBack::IMNotify);
 	if(tRet != TUP_SUCCESS)
 	{
@@ -165,7 +165,7 @@ int UCRegMgr::SignInByPWD(const std::string& _account
 	serviceArg.needIcon = TUP_TRUE;
 	serviceArg.isVpnAccess = TUP_FALSE;
 
-	strcpy_s(serviceArg.localIP,IM_D_IP_LENGTH,localip.c_str());
+	strcpy_s(serviceArg.localIP,IM_D_IP_LENGTH,m_strLocalIP.c_str());
 	strcpy_s(serviceArg.timestamp,IM_D_MAX_TIMESTAMP_LENGTH,"1900000000000");
 
 	IM_S_SERVICEPROFILEACK serviceAck;
@@ -247,17 +247,22 @@ int UCRegMgr::SignInByPWD(const std::string& _account
 	CALL_S_IF_INFO IFInfo  ;
 	memset(&IFInfo,0,sizeof(CALL_S_IF_INFO));
 	IFInfo.ulType =  CALL_E_IP_V4;
-	IFInfo.uAddress.ulIPv4 = inet_addr(localip.c_str());
+	IFInfo.uAddress.ulIPv4 = inet_addr(m_strLocalIP.c_str());
 	tRet = tup_call_set_cfg(CALL_D_CFG_NET_NETADDRESS,  &IFInfo);
 	if (TUP_SUCCESS != tRet)
 	{
 		ERROR_LOG("cfg netaddress failed.");
 		return UC_SDK_Failed;
 	}
-
+	tRet =tup_call_set_cfg(CALL_D_CFG_AUDIO_NETADDRESS, (TUP_VOID*)(const_cast<char*>(m_strLocalIP.c_str())));
+	if (TUP_SUCCESS != tRet)
+	{
+		ERROR_LOG("cfg audio netaddress failed.");
+		return UC_SDK_Failed;
+	}
 
 	std::string sipAccount = serviceAck.sipAccount;
-	std::string sipUserName = sipAccount + "@" + localip;
+	std::string sipUserName = sipAccount + "@" + m_strLocalIP;
 
 	tRet = tup_call_register(sipAccount.c_str(),sipUserName.c_str(),serviceAck.sipPassword);
 	if(TUP_SUCCESS != tRet)
@@ -274,7 +279,6 @@ int UCRegMgr::SignInByPWD(const std::string& _account
 	{
 		m_strBindNO = userinfo.bindNO;
 	}
-	
 
 	////////2015-05-08 by c00327158标记用户登录是否登出/////
 	m_bLogOutFlag = false;
@@ -283,6 +287,10 @@ int UCRegMgr::SignInByPWD(const std::string& _account
 }
 int UCRegMgr::SignOut()
 {
+	//////保存本次登录的IP地址信息  by c00327158 2015.8.5 Start/////
+ 	ConfigMgr::Instance().SaveUserConfig(LOCALIP,m_strLocalIP);
+	//////保存本次登录的IP地址信息  by c00327158 2015.8.5 End/////
+
 	UCRegMgr::Instance().SetLoginFlag(false);
 
 	TUP_RESULT tRet = tup_call_deregister(m_strSipAccount.c_str());
@@ -376,7 +384,7 @@ int UCRegMgr::PubSelfStatus(int _state,const std::string& _desc)
 	}
 
 
-	if(_state == UC_NoDisturb && m_iSelfStatus != !UC_NoDisturb)
+	if((_state == UC_NoDisturb && m_iSelfStatus != !UC_NoDisturb)||(_state == UC_NoDisturb&& m_iSelfStatus == UC_INit))
 	{
 		//开启免打扰
 		std::string DNDActiveCode = ConfigMgr::Instance().GetRegDNDCode();
@@ -406,7 +414,7 @@ int UCRegMgr::PubSelfStatus(int _state,const std::string& _desc)
 			ERROR_LOG("tup_call_set_IPTservice RegDND failed,return:%d",tRet);
 		}
 	}
-	else if(_state != UC_NoDisturb && m_iSelfStatus == UC_NoDisturb)
+	else if((_state != UC_NoDisturb && m_iSelfStatus == UC_NoDisturb)||((_state != UC_NoDisturb&& m_iSelfStatus == UC_INit)))
 	{
 		//关闭免打扰
 		std::string DNDActiveCode = ConfigMgr::Instance().GetRegDNDCode();
@@ -529,8 +537,90 @@ int UCRegMgr::GetContactInfo(const std::string& _account,STContact& _contact)
 		return UC_SDK_Failed;
 	}
 
-	strcpy_s(_contact.ucAcc_,STRING_LENGTH,userInfo.account);
-	strcpy_s(_contact.ipphone1_,STRING_LENGTH,userInfo.bindNO);
+	memset(_contact.gender_,0,STRING_LENGTH);
+	switch(userInfo.gender)
+	{
+	case IM_E_GENDER_MALE:
+		{
+			memcpy_s(_contact.gender_,STRING_LENGTH,"Man",strlen("Man"));
+		}
+		break;
+	case IM_E_GENDER_FEMAIL:
+		{
+			memcpy_s(_contact.gender_,STRING_LENGTH,"Woman",strlen("Woman"));
+		}
+		break;
+	default:
+		    memcpy_s(_contact.gender_,STRING_LENGTH,"Undefined",strlen("Undefined"));
+		break;
+	}
+	memset(_contact.id_,0,STRING_LENGTH);
+	sprintf_s(_contact.id_,"%d",userInfo.staffID);
+//	strcpy_s(_contact.ucAcc_,STRING_LENGTH,userInfo.account);
+	memset(_contact.ucAcc_,0,STRING_LENGTH);
+	memcpy_s(_contact.ucAcc_,STRING_LENGTH,userInfo.account,STRING_LENGTH-1);
+//  strcpy_s(_contact.staffNo_,STRING_LENGTH,userInfo.staffNO);
+	memset(_contact.staffNo_,0,STRING_LENGTH);
+	memcpy_s(_contact.staffNo_,STRING_LENGTH,userInfo.staffNO,STRING_LENGTH-1);
+// 	strcpy_s(_contact.name_,STRING_LENGTH,userInfo.name);
+	memset(_contact.name_,0,STRING_LENGTH);
+	std::string unicodename = eSDKTool::utf8str2unicodestr(userInfo.name);
+	memcpy_s(_contact.name_,STRING_LENGTH,unicodename.c_str(),STRING_LENGTH-1);
+// 	strcpy_s(_contact.nickName_,STRING_LENGTH,userInfo.nativeName);
+	memset(_contact.nickName_,0,STRING_LENGTH);
+	memcpy_s(_contact.nickName_,STRING_LENGTH,userInfo.nativeName,STRING_LENGTH-1);
+//  strcpy_s(_contact.qpinyin_,STRING_LENGTH,userInfo.qPinYin);
+	memset(_contact.qpinyin_,0,STRING_LENGTH);
+	memcpy_s(_contact.qpinyin_,STRING_LENGTH,userInfo.qPinYin,STRING_LENGTH-1);
+// 	strcpy_s(_contact.homePhone_,STRING_LENGTH,userInfo.homePhone);
+	memset(_contact.homePhone_,0,STRING_LENGTH);
+	memcpy_s(_contact.homePhone_,STRING_LENGTH,userInfo.homePhone,STRING_LENGTH-1);
+// 	strcpy_s(_contact.officePhone_,STRING_LENGTH,userInfo.officePhone);
+	memset(_contact.officePhone_,0,STRING_LENGTH);
+	memcpy_s(_contact.officePhone_,STRING_LENGTH,userInfo.officePhone,STRING_LENGTH-1);
+// 	strcpy_s(_contact.officePhone2_,STRING_LENGTH,userInfo.shortPhone);
+	memset(_contact.officePhone2_,0,STRING_LENGTH);
+	memcpy_s(_contact.officePhone2_,STRING_LENGTH,userInfo.shortPhone,STRING_LENGTH-1);
+// 	strcpy_s(_contact.mobile_,STRING_LENGTH,userInfo.mobile);
+	memset(_contact.mobile_,0,STRING_LENGTH);
+	memcpy_s(_contact.mobile_,STRING_LENGTH,userInfo.mobile,STRING_LENGTH-1);
+// 	strcpy_s(_contact.otherPhone_,STRING_LENGTH,userInfo.otherPhone);
+	memset(_contact.otherPhone_,0,STRING_LENGTH);
+	memcpy_s(_contact.otherPhone_,STRING_LENGTH,userInfo.otherPhone,STRING_LENGTH-1);
+
+	memset(_contact.address_,0,STRING_LENGTH);
+	memcpy_s(_contact.address_,STRING_LENGTH,userInfo.address,STRING_LENGTH-1);
+
+// 	strcpy_s(_contact.email_,STRING_LENGTH,userInfo.email);
+	memset(_contact.email_,0,STRING_LENGTH);
+	memcpy_s(_contact.email_,STRING_LENGTH,userInfo.email,STRING_LENGTH-1);
+// 	strcpy_s(_contact.duty_,STRING_LENGTH,userInfo.title);
+	memset(_contact.duty_,0,STRING_LENGTH);
+	memcpy_s(_contact.duty_,STRING_LENGTH,userInfo.title,STRING_LENGTH-1);
+// 	strcpy_s(_contact.fax_,STRING_LENGTH,userInfo.fax);
+	memset(_contact.fax_,0,STRING_LENGTH);
+	memcpy_s(_contact.fax_,STRING_LENGTH,userInfo.fax,STRING_LENGTH-1);
+// 	strcpy_s(_contact.deptName_,STRING_LENGTH,userInfo.deptNameEn);
+	memset(_contact.deptName_,0,STRING_LENGTH);
+	memcpy_s(_contact.deptName_,STRING_LENGTH,userInfo.deptNameEn,STRING_LENGTH-1);
+// 	strcpy_s(_contact.webSite_,STRING_LENGTH,userInfo.webSite);
+	memset(_contact.webSite_,0,STRING_LENGTH);
+	memcpy_s(_contact.webSite_,STRING_LENGTH,userInfo.webSite,STRING_LENGTH-1);
+// 	strcpy_s(_contact.desc_,STRING_LENGTH,userInfo.desc);
+	memset(_contact.desc_,0,STRING_LENGTH);
+	memcpy_s(_contact.desc_,STRING_LENGTH,userInfo.desc,STRING_LENGTH-1);
+// 	strcpy_s(_contact.signature_,STRING_LENGTH,userInfo.signature);
+	memset(_contact.signature_,0,STRING_LENGTH);
+	memcpy_s(_contact.signature_,STRING_LENGTH,userInfo.signature,STRING_LENGTH-1);
+// 	strcpy_s(_contact.imageID_,STRING_LENGTH,userInfo.imageID);
+	memset(_contact.imageID_,0,STRING_LENGTH);
+	memcpy_s(_contact.imageID_,STRING_LENGTH,userInfo.imageID,STRING_LENGTH-1);
+//	strcpy_s(_contact.ipphone1_,STRING_LENGTH,userInfo.bindNO);
+	memset(_contact.ipphone1_,0,STRING_LENGTH);
+	memcpy_s(_contact.ipphone1_,STRING_LENGTH,userInfo.bindNO,STRING_LENGTH-1);
+
+	memset(_contact.zip_,0,STRING_LENGTH);
+	memcpy_s(_contact.zip_,STRING_LENGTH,userInfo.postalcode,STRING_LENGTH-1);
 	return UC_SDK_Success;
 }
 

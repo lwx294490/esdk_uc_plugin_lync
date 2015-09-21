@@ -1,7 +1,7 @@
 ﻿<Window x:Class="LyncWpfApp.WinCallReceive"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="{DynamicResource Incomingcall}" Background="#e6e9ef" ShowInTaskbar="False" Topmost ="True" ResizeMode=" NoResize"  Icon="/LyncWpfApp;component/Image/Lync.png" Loaded="Window_Loaded" mc:Ignorable="d" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" Height="64" Width="241">
+        Title="{DynamicResource Incomingcall}" Background="#e6e9ef" ShowInTaskbar="False" Topmost ="True" ResizeMode=" NoResize"  Icon="/LyncWpfApp;component/Image/Lync.png" Loaded="Window_Loaded" mc:Ignorable="d" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" Height="64" Width="262">
     <Grid >
         <Grid.RowDefinitions>
             <RowDefinition Height="*"></RowDefinition>
@@ -9,9 +9,9 @@
         </Grid.RowDefinitions>
         <Image Name="imgType"  Source="/LyncWpfApp;component/Image/call/video_1.png" ></Image>
         <Image Name="imgOtherPhone"  Source="/LyncWpfApp;component/Image/OtherPhone.png" HorizontalAlignment="Left" Height="20" Margin="7,6,0,6"></Image>
-        <Button Command="{Binding AnswerCommand}"  Content="{DynamicResource Answer}" Height="23" Name="btnAnswer" VerticalAlignment="Top" Margin="15,1,0,0" HorizontalAlignment="Left" Width="75" Grid.Row="1" />
-        <Button Command="{Binding DeclineCommand}"  Content="{DynamicResource Decline}" Height="23" HorizontalAlignment="Right"  Name="btnDecline" VerticalAlignment="Top" Width="75" Margin="0,1,15,0" Grid.Row="1" />
-        <Expander Grid.Row="1" Height="23" HorizontalAlignment="Left" Margin="99,2,0,0" Name="expander" VerticalAlignment="Top" Expanded="expander_Expanded" Collapsed="expander_Collapsed" ExpandDirection="Up">
+        <Button Command="{Binding AnswerCommand}"  Content="{DynamicResource Answer}" Height="23" Name="btnAnswer" VerticalAlignment="Top" Margin="15,1,0,0" HorizontalAlignment="Left" Width="87" Grid.Row="1" />
+        <Button Command="{Binding DeclineCommand}"  Content="{DynamicResource Decline}" Height="23" HorizontalAlignment="Right"  Name="btnDecline" VerticalAlignment="Top" Width="87" Margin="0,1,17,0" Grid.Row="1" />
+        <Expander Grid.Row="1" Height="23" HorizontalAlignment="Left" Margin="108,0,0,0" Name="expander" VerticalAlignment="Top" Expanded="expander_Expanded" Collapsed="expander_Collapsed" ExpandDirection="Up">
             <Grid />
         </Expander>
         <TextBox Height="23" HorizontalAlignment="Left" Margin="32,4,0,0" Text="{DynamicResource transfernNumber}"  Name="txtOtherPhone" GotMouseCapture="txtOtherPhone_GotMouseCapture"  VerticalAlignment="Top" Width="112" Grid.Row="0" VerticalContentAlignment="Center" />

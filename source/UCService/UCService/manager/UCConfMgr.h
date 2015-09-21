@@ -8,6 +8,7 @@ typedef enum CONF_CREATE_STATUS
 	CONF_CREATE_FAILED
 };
 
+
 class UCConfMgr
 {
 public:
@@ -43,6 +44,16 @@ public:
 	int ModifyMemberStatusInCall(EM_ConvnerOperateType operateType
 		,EM_MemberType _memberType
 		,const std::string& strAccount);
+	void AddPhoneMeminConf(std::string _phone){m_confPhoneMemList.insert(_phone);};  ////被叫使用，用于确定群组中加入会议的人
+	void DelPhoneMeminConf(std::string _phone){m_confPhoneMemList.erase(_phone);};  
+	void AddUCMeminConf(std::string _ucAccount,std::string _BindNum){m_confUCMemList[_ucAccount] = _BindNum ;};////被叫使用，用于确定群组中加入会议的人
+	void DelUCMeminConf(std::string _ucAccount){m_confUCMemList.erase(_ucAccount); ;};
+	bool IsPhoneMemberInconf(std::string strPhone){	return (m_confPhoneMemList.find(strPhone) != m_confPhoneMemList.end()) ;}
+	bool IsUCMemberInconf(std::string _account){  return (m_confUCMemList.find(_account) != m_confUCMemList.end()) ;}
+	bool IsChairman(void){return m_ISChairman ;};
+	void SetChairmainRole(bool _role){m_ISChairman = _role;};
+
+
 
 private:
 	UCConfMgr(void);
@@ -57,8 +68,10 @@ private:
 	std::string m_strCalleeNum;			//被叫号码，作为2人呼叫转会议时的第一次邀请的号码
 	std::string m_strCalleeAccount;		//被叫账户，依赖m_bIsUCAccount。m_bIsUCAccount为true时有值，否则无值
 	bool m_bIsUCAccount;
+	bool m_ISChairman;                  //会议中是不是扮演主席的角色/////
 	typedef std::map<int,std::string> MapConfStatusDesc;	//会议状态描述
 	MapConfStatusDesc m_mapConfStatusDesc;
 	CONF_CREATE_STATUS m_emRecvConfCreate;//会议创建结果
+	int m_count;                      ////第一次主席入会延时处理
 };
 

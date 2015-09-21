@@ -54,16 +54,6 @@ bool UCRegEvent::DoHandle(void)
 		ConfigMgr::Instance().InitForwardCode();
 		ConfigMgr::Instance().InitDNDCode();
 
-		////2015-05-05 by c00327158 判断用户上一次登陆是否设置了话机联动消息///////
-		std::string ActiceDevice;
-		ConfigMgr::Instance().GetUserConfig(SETTING_ACTIVEDEVICE_IPPHONE,ActiceDevice);
-
-		if (PhoneDevice == ActiceDevice)
-		{
-			ConfigMgr::Instance().SetPhoneJointDevType(IPPhone_Device);
-			INFO_LOG("_iDevType=%d",IPPhone_Device);
-		}
-
 		UCRegMgr::Instance().SetLoginFlag(true);
 		(void)UCPlayMgr::Instance().PlayLogin();
 
@@ -87,12 +77,34 @@ bool UCRegEvent::DoHandle(void)
 			(void)UCDeviceMgr::Instance().SetCurrentVideoDev(iIndex);
 			strDevIndex.clear();
 		}
+		//////重新设置IPT业务////////
+		 ConfigMgr::Instance().InitIPTService();
 
 		INFO_LOG("----Login success.");
 	
 	}
 	else
 	{
+		if (m_state == UC__KickOut)
+		{
+			(void)tup_im_setcancelsendingmessage();
+			std::string  m_Sipaccount = UCRegMgr::Instance().GetSipAccount();
+			TUP_RESULT tRet = tup_call_deregister(m_Sipaccount.c_str());
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_call_deregister failed.");
+			}
+			tRet = tup_im_logout();
+			if(tRet != TUP_SUCCESS)
+			{
+				ERROR_LOG("tup_im_logout failed.");
+			}
+			(void)tup_im_setdispatchmessage(TUP_FALSE);
+			UCHistoryMgr::Instance().UninitUserData();
+		}
+		//////维持原接口/////
+		m_state = UC__SignedFailed;
+		///////维持原接口//////
 		TimerMgrInstance().killtimer(HEARTBEAT_TIMER_ID);
 		TimerMgrInstance().uninit();
 		UCRegMgr::Instance().SetLoginFlag(false);

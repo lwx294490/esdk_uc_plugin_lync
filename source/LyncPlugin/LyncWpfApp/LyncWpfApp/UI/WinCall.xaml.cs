@@ -30,12 +30,12 @@ namespace LyncWpfApp
         public WinSlide slideVol;     
         public UCVideo video;
         public bool isMetting = false;
-        public CallHistoryType callType;
+        public CallHistoryType callType;      
         public bool isreturn;     //定义一个全局变量（为了控制前后顺序导致wincall高度变化）
         public bool IsReturn=true;     //再定义一个全局变量（为了使视频转语音可以不受之前isreturn影响）
         public int index;
         public bool isAddContract=false;     //定义一个全局变量，显示它已经进入入会，这样就使之前的按钮控制灰色的程序不执行（WinLync 635行那个不执行）
-        public static object lockObject = new object();
+        public static object lockObject = new object();   //
         string src;
         Thread threadGetSlideState = null;
         bool shouldStop = false;
@@ -52,7 +52,8 @@ namespace LyncWpfApp
         int iVolLeftOff = 115;//音量控件左偏移
         int iTopOff = 10;//控件top偏移
         int iSlideChangeValue = 10;//声音控件每次改变的值
-        int a = 1;
+        //int a = 1;
+        //int i = 0;    //modify 2015/7/27
         public string strtemp;  //传输该参数至winlync 界面，用于判断主被叫
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool GetCursorPos(out POINT pt);
@@ -107,11 +108,11 @@ namespace LyncWpfApp
             }
             this.Loaded += new RoutedEventHandler(WinCall_Loaded);
             //被叫、主叫权限控制
-            if (SingletonObj.LoginInfo.LyncName != str.Split(';')[0] && str.Split(';').Length != 1)
+            if (SingletonObj.LoginInfo.LyncName != str.Split(';')[0] && str.Split(';').Length != 1)   //之前是str.Split(';')[0]    2015/7/30
             {
                 this.btnAddContact.IsEnabled = false; 
             }
-            if (SingletonObj.LoginInfo.LyncName != str.Split(';')[0] || str.Split(';').Length < 3)
+            if (SingletonObj.LoginInfo.LyncName != str.Split(';')[0] || str.Split(';').Length < 3)    //之前是str.Split(';')[0]     2015/7/30
             {
                 listContact.ContextMenu = null;
             }
@@ -168,20 +169,20 @@ namespace LyncWpfApp
                 video.Show();
 
                 host.Child = video;
-                btnAddContact.IsEnabled = false;
+                btnAddContact.IsEnabled = false;               
             }));
         }
         public void SetVideoImage()//设置视频按钮图标
         {
             if (lync.toolBar.JointType == PhoneJointType.IPPhone_Device)
             {
-                UpdateImage.UpdateData(imgVideo, "/Image/call/video_3.png");
+                UpdateImage.UpdateData(imgVideo, "/Image/call/video_3.png");    
             }
             else
             {
                 if (imgVideo.Source.ToString().IndexOf("unvideo") != -1)
                 {
-                    UpdateImage.UpdateData(imgVideo, "/Image/call/video_1.png");
+                    UpdateImage.UpdateData(imgVideo, "/Image/call/video_3.png");   //之前是3   2015/7/16
                 }
                 else
                 {
@@ -245,7 +246,7 @@ namespace LyncWpfApp
             }
         }
         void WinCall_Loaded(object sender, RoutedEventArgs e)
-        {
+        {            
             threadGetSlideState = new Thread(new ThreadStart(GetSildeState));
             threadGetSlideState.Priority = ThreadPriority.BelowNormal;
             threadGetSlideState.Start();
@@ -269,7 +270,11 @@ namespace LyncWpfApp
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 lync.GetLyncUserState();
-                lync.SetAvailability(ContactAvailability.Busy);
+                //modify by 00327190 2015/7/27
+                if (lync.userState != ContactAvailability.DoNotDisturb)   //不为请勿打扰状态时变为忙，若之前就是请勿打扰，则不做变化
+                {
+                    lync.SetAvailability(ContactAvailability.Busy);
+                }
             }));
             WinLync.lyncCounter++;
             SetVideoLocalRemoteSize();
@@ -307,19 +312,97 @@ namespace LyncWpfApp
                     this.Height = win7OHeight;                 
                     this.Width = iWinWidth;
                     host.Child = null;
+                    src = src.Replace("VideoCall;", "");   //modify by 00327190  2015/8/12
+                    strtemp = src;
                     model.IsVideo = false;
-                    if (callType == CallHistoryType.HISTORY_CALL_DIALED)
+                    if (lync != null)   //if (lync!=null && lync.Ishold == false)   //2015/8/5  视屏情况下保持呼叫，isHold 为true ,此时不可以让加人按钮可用
                     {
-                        btnAddContact.IsEnabled = true;
-                    }                    
-                    UpdateImage.UpdateData(imgVideo, "/Image/call/video_1.png");                 
-                    this.UpdateLayout();                  
+                        if (callType == CallHistoryType.HISTORY_CALL_DIALED)
+                        {
+                            btnAddContact.IsEnabled = true;
+                        }
+                    }
+                    if (lync.Ishold == true||lync.IsBlindTrans==true)  //2015/8/18  视屏情况下保持呼叫或者转移失败，isHold 为true ,此时不可以让加人按钮可用
+                    {
+                        btnAddContact.IsEnabled = false;
+                        btnBlindTransCall.IsEnabled = false;
+                        if (lync.IsBlindTrans == true)//2015/8/25  只要是盲转，则以下按钮都不能用
+                        {
+                           btnCallSuspend.IsEnabled = false;
+                           btnVideo.IsEnabled = false;
+                        }
+                    }
+                    //modify by 00327190   2015/7/16
+                    if (btnVideo.IsEnabled == false)
+                    {
+                        UpdateImage.UpdateData(imgVideo, "/Image/call/video_3.png");
+                    }
+                    else
+                    {
+                        if (lync.toolBar.JointType == PhoneJointType.IPPhone_Device)
+                        {
+                            UpdateImage.UpdateData(imgVideo, "/Image/call/video_3.png");
+                        }
+                        else
+                        {
+                            UpdateImage.UpdateData(imgVideo, "/Image/call/video_1.png");
+                        }
+                    }
+                    this.UpdateLayout();
+                    lync.IsBlindTrans = false;
                 }));
               
             }          
 
         }
-      
+
+        public void VideoConnected()
+        {
+            //7/27   
+            if (lync.toolBar.JointType == PhoneJointType.PC_Device)
+            {
+                Dispatcher.Invoke(new Action(() =>
+                {
+                    lync.setBtn();
+                    lync.winCall.btnAddContact.IsEnabled = false;                
+                    imgVideo.Source = new BitmapImage(new Uri("/LyncWpfApp;component/Image/call/unvideo_1.png", UriKind.RelativeOrAbsolute));
+                }));                
+               
+            }
+        }
+
+
+        public void VideoClose()
+        {
+            //7/27  7/29
+            if (lync.toolBar.JointType == PhoneJointType.PC_Device)
+            {
+                Dispatcher.Invoke(new Action(() =>
+                {
+
+                    if (lync.Ishold == false)   //2015/8/5 视频情况下呼叫保持不进行setBtn;
+                    {
+                        lync.setBtn();
+                        if (lync.winCall.strtemp.Split(';')[0] != "VideoCall")    //语音通话
+                        {
+                            if (SingletonObj.LoginInfo.LyncName != lync.winCall.strtemp.Split(';')[0] && lync.winCall.strtemp.Split(';').Length != 1)   // //之前是str.Split(';')[0]    2015/7/30
+                            {
+                                lync.winCall.btnAddContact.IsEnabled = false;
+                            }
+                            else
+                            {
+                                lync.winCall.btnAddContact.IsEnabled = true;
+                            }
+                        }
+                    }
+
+
+                }));
+
+            }
+        }
+
+
         void WinCall_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (slideMic != null)
@@ -362,6 +445,7 @@ namespace LyncWpfApp
         {
             try
             {
+               
                 if (slideMic != null)
                 {
                     slideMic.Close();
@@ -407,8 +491,7 @@ namespace LyncWpfApp
                 {
                     model.HoldDownCommand.Execute(null);
                     model.InsertCallHistory();
-                }
-
+                }              
                 this.isreturn = false;     //modify by jinyeqing   2015/5/22
                 lync.winCall = null;
                 //lync.winCallReceive.Visibility = Visibility.Hidden;  //modify by jinyeqing   2015/6/5
@@ -446,7 +529,6 @@ namespace LyncWpfApp
             }
             int newValue = model.Slider_GetValue("MicPhone");
             slideMic.slider.Value = newValue / iSlideChangeValue;
-
             if (imgMic.Source.ToString().IndexOf("Mic") > 0)
             {
                 if (imgMic.Source.ToString().IndexOf("Mic_1") > 0)
@@ -616,7 +698,9 @@ namespace LyncWpfApp
                // Dispatcher.Invoke(new Action(() =>
                //{
                    this.isAddContract = true;   //modify by 00327190  使winlync界面635行异步设置btnVideo 状态 不执行 
-                   Title = contactList[0].UserName + StringHelper.FindLanguageResource("TempGroup");
+                   string a = StringHelper.GetSubString(contactList[0].UserName);
+                   Title = a + StringHelper.FindLanguageResource("TempGroup");   //2015/8/3  适配葡语                  
+                   //Title = contactList[0].UserName + StringHelper.FindLanguageResource("TempGroup");
                    listContact.ContextMenu = contactList[0].UserName == SingletonObj.LoginInfo.LyncName ? listMenu : null;
                    btnVideo.IsEnabled = false;
                    btnCallSuspend.IsEnabled = false;
@@ -624,7 +708,9 @@ namespace LyncWpfApp
                    if (contactList.Count > maxMum)
                    {
                        Height = winOrightHeight + singleItemHeight * maxMum;
-                       rowContact.Height = new System.Windows.GridLength(Height - win7OHeight);
+                       rowContact.Height = new System.Windows.GridLength(Height - win7OHeight);  
+                                    
+                       listContact.ScrollIntoView(listContact.Items[0]);
                    }
                    else
                    {
@@ -725,7 +811,7 @@ namespace LyncWpfApp
                 else
                 {
                     imgCallSuspend.Source = new BitmapImage(new Uri("/LyncWpfApp;component/Image/call/Resume_1.png", UriKind.RelativeOrAbsolute));
-                }
+                }               
             }
             else
             {
@@ -736,7 +822,7 @@ namespace LyncWpfApp
                 else
                 {
                     imgCallSuspend.Source = new BitmapImage(new Uri("/LyncWpfApp;component/Image/call/Resume_3.png", UriKind.RelativeOrAbsolute));
-                }
+                }               
             }
         }
 
@@ -869,7 +955,7 @@ namespace LyncWpfApp
                 }
                 else
                 {
-                    imgVideo.Source = new BitmapImage(new Uri("/LyncWpfApp;component/Image/call/video_2.png", UriKind.RelativeOrAbsolute));
+                    imgVideo.Source = new BitmapImage(new Uri("/LyncWpfApp;component/Image/call/video_2.png", UriKind.RelativeOrAbsolute));   
                 }
             }
             else
@@ -888,7 +974,7 @@ namespace LyncWpfApp
                 }
                 else
                 {
-                    imgVideo.Source = new BitmapImage(new Uri("/LyncWpfApp;component/Image/call/video_1.png", UriKind.RelativeOrAbsolute));
+                    imgVideo.Source = new BitmapImage(new Uri("/LyncWpfApp;component/Image/call/video_1.png", UriKind.RelativeOrAbsolute));  //原来是1 
                 }
             }
             else
@@ -970,7 +1056,7 @@ namespace LyncWpfApp
         public void UpdateUCContactState(object ucInfo)
         {
             lock (WinCall.lockObject)
-            {
+            {              
                 try
                 {
                     LogManager.SystemLog.Info("UpdateUCContactState Monitor.Enter");
@@ -1014,15 +1100,30 @@ namespace LyncWpfApp
                     LogManager.SystemLog.Info("UpdateUCContactState Monitor.Exit");
                 }
             }
+            if (this.lync.winCall != null)   //2015/8/24  只有会议时才自动更新SetBtn
+            {
+                if (this.lync.winCall.strtemp.Split(';')[0] != "VideoCall")
+                {
+                    if (this.lync.winCall.strtemp.Split(';').Length > 2)
+                    {
+                        LogManager.SystemLog.Info(string.Format("this.lync.winCall.strtemp.Split(';').Length={0}",this.lync.winCall.strtemp.Split(';').Length));
+                        this.lync.setBtn();  //2015/8/11
+                    }
+                }
+            }
         }
         public void SetButCallSuspEnable(bool isVideo)
         {
             Dispatcher.Invoke(new Action(()
             =>
-            {
-                btnCallSuspend.IsEnabled = !isVideo;
-                btnBlindTransCall.IsEnabled = !isVideo;
-                
+            {   
+                //modify by 00327190  2015/7/16  视频呼叫变语音后再升级成视频，这样会导致呼叫保持和盲转禁掉 
+                if (lync.toolBar.JointType == PhoneJointType.PC_Device)
+                {
+                    btnCallSuspend.IsEnabled = !isVideo;
+
+                    btnBlindTransCall.IsEnabled = !isVideo;
+                }
             }));
         }
 
@@ -1092,6 +1193,7 @@ namespace LyncWpfApp
                 imgBlindTrans.Source = new BitmapImage(new Uri("/LyncWpfApp;component/Image/call/callforward_3.png", UriKind.RelativeOrAbsolute));
             }
         }
+
 
        
     }

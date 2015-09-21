@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:UC="clr-namespace:LyncWpfApp"
         xmlns:WinFormControls="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
-        Title="{DynamicResource Call}" Height="70" Width="385"  Icon="/Image/lync.ico" ResizeMode="CanMinimize"  >
+        Title="{DynamicResource Call}" Height="70" Width="385"  Icon="/Image/lync.ico" ResizeMode="CanMinimize"  Topmost="False"  >
     <Grid Name="callGrid" Background ="#e6e9ef" > 
         <Grid.RowDefinitions>
             <RowDefinition Height="1" Name="rowContact" />
@@ -11,15 +11,15 @@
             <RowDefinition Height="34" />
         </Grid.RowDefinitions>
         <Grid Grid.Row="1" Name="rowVideo" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  >
-           
-            <WindowsFormsHost HorizontalAlignment="Stretch" Name="host"  VerticalAlignment="Stretch" >
+
+            <WindowsFormsHost HorizontalAlignment="Stretch" Name="host"  VerticalAlignment="Stretch"  >
                
             </WindowsFormsHost>
         </Grid>
        
 
         <Grid Grid.Row ="0" Background ="#e6e9ef" VerticalAlignment =" Stretch">
-            <ListBox  PreviewMouseRightButtonDown="listContact_PreviewMouseRightButtonDown"  HorizontalAlignment="Stretch"   Margin="-1,0,1,0"   SelectionChanged="listContact_SelectionChanged"  Name="listContact" Background ="#e6e9ef" VerticalAlignment="Stretch"  ScrollViewer.VerticalScrollBarVisibility="Hidden"  ScrollViewer.HorizontalScrollBarVisibility="Disabled" >
+            <ListBox  PreviewMouseRightButtonDown="listContact_PreviewMouseRightButtonDown"  HorizontalAlignment="Stretch"   Margin="-1,0,1,0"   SelectionChanged="listContact_SelectionChanged"  Name="listContact" Background ="#e6e9ef" VerticalAlignment="Stretch"  ScrollViewer.VerticalScrollBarVisibility="Auto"  ScrollViewer.HorizontalScrollBarVisibility="Disabled" >
                 <ListBox.ItemTemplate>
                     <DataTemplate>                  
                             <Grid >
@@ -84,7 +84,7 @@
                         </StackPanel>
                     </Button.Content>
                 </Button>
-                <Button Name="btnSetMicPhone" Height ="28" Width ="30" MouseEnter="btnSetMicPhone_MouseEnter"  Command="{Binding SetMicPhoneCommand}" ToolTip="{DynamicResource MuteUnmuteMicrophone}" MouseLeave="btnSetMicPhone_MouseLeave" IsEnabledChanged="btnSetMicPhone_IsEnabledChanged" >
+                <Button Name="btnSetMicPhone" Height ="28" Width ="30" MouseEnter="btnSetMicPhone_MouseEnter"  Command="{Binding SetMicPhoneCommand}" ToolTip="{DynamicResource MuteUnmuteMicrophone}"  MouseLeave="btnSetMicPhone_MouseLeave" IsEnabledChanged="btnSetMicPhone_IsEnabledChanged" >
                     <Button.Content>
                         <StackPanel Orientation=" Horizontal">
                             <Image Name="imgMic" Width="24" Height="24"  Source="/LyncWpfApp;component/Image/call/Mic_1.png" />
@@ -104,7 +104,7 @@
                 <Button Name="btnHoldDown" Height ="28" Width ="80" Command="{Binding HoldDownCommand}"  ToolTip="{DynamicResource EndCall}">
                     <Button.Content>
                         <StackPanel Orientation=" Horizontal">
-                            <Image Source="/LyncWpfApp;component/Image/call/hold.JPG" />
+                            <Image Source="/LyncWpfApp;component/Image/call/hold.JPG"  />
                         </StackPanel>
                     </Button.Content>
                 </Button>

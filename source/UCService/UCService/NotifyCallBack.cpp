@@ -19,6 +19,8 @@
 #include "UCCallMgr.h"
 #include "UCConfMgr.h"
 #include "UCGroupMgr.h"
+#include "UCRegMgr.h"
+#include "UCConfigMgr.h"
 
 
 CNotifyCallBack::CNotifyCallBack(void)
@@ -62,7 +64,7 @@ TUP_BOOL CNotifyCallBack::IMNotify(IM_E_EVENT_ID eventID, void *body)
 		break;
 	case IM_E_EVENT_IM_KICKOUT_NOTIFY:
 		{	
-			INFO_LOG("IM_E_EVENT_IM_KICKOUT_NOTIFY.");
+			INFO_LOG("IM_E_EVENT_IM_KICKOUT_NOTIFY.");			
 			IM_S_KICKOUT_NOTIFY* notify = (IM_S_KICKOUT_NOTIFY*)body;
 			if(notify!=NULL)
 			{				
@@ -70,7 +72,7 @@ TUP_BOOL CNotifyCallBack::IMNotify(IM_E_EVENT_ID eventID, void *body)
 				{
 					//kicked out					
 					UCRegEvent* pEvent = new UCRegEvent();
-					pEvent->m_state = UC__SignedFailed;
+					pEvent->m_state = UC__KickOut;
 					pEvent->m_stateDesc = ACC_KICKED;
 					CUCEventMgr::Instance().PushEvent(pEvent);
 				}//lint !e429
@@ -219,7 +221,7 @@ TUP_BOOL CNotifyCallBack::IMNotify(IM_E_EVENT_ID eventID, void *body)
 			INFO_LOG("IM_E_EVENT_IM_FILEPROCESS_NOTIFY.");
 			IM_S_FILEPROCESS_NOTIFY* pNotify = (IM_S_FILEPROCESS_NOTIFY*)body;
 			IM_S_FILEPROCESS_NOTIFY* pInfo = new IM_S_FILEPROCESS_NOTIFY;
-			memcpy(pInfo,pNotify,sizeof(IM_S_P2PFILECHOOSE_NOTIFY));
+			memcpy(pInfo,pNotify,sizeof(IM_S_FILEPROCESS_NOTIFY));
 			UCFileTransEvent * pEvent = new UCFileTransEvent();
 			pEvent->SetPara(eventID,(void*)pInfo);
 			CUCEventMgr::Instance().PushEvent(pEvent);
@@ -362,7 +364,7 @@ TUP_VOID CNotifyCallBack::CallNotify(TUP_UINT32 msgid, TUP_UINT32 param1, TUP_UI
 			CALL_S_CALL_INFO* pInfo = (CALL_S_CALL_INFO*)pBody;
 			if(NULL == pInfo)
 			{
-				ERROR_LOG("msgid:%d,pInfo is NULL.",CALL_E_EVT_CALL_ENDED);
+				ERROR_LOG("msgid:%d,pInfo is NULL.",CALL_E_EVT_CALL_CONNECTED);
 				return;
 			}
 			CALL_S_CALL_INFO *pNotify = new CALL_S_CALL_INFO;
@@ -444,11 +446,19 @@ TUP_VOID CNotifyCallBack::CallNotify(TUP_UINT32 msgid, TUP_UINT32 param1, TUP_UI
 				ERROR_LOG("pNotify is NULL.");
 				return;
 			}
-			if(!pNotify->bIsVideo && pNotify->ulResult == TUP_SUCCESS)
+			if(/*!pNotify->bIsVideo && */pNotify->ulResult == TUP_SUCCESS)
 			{
 				UCCallVideoEvent* pEvent = new UCCallVideoEvent;
 				pEvent->SetCallid(pNotify->ulCallID);
-				pEvent->SetVideoStatus(CALL_VIDEO_CLOSE);
+				if (pNotify->bIsVideo)
+				{
+					pEvent->SetVideoStatus(CALL_VIDEO_CONNECTED);
+				}
+				else
+				{
+					pEvent->SetVideoStatus(CALL_VIDEO_CLOSE);
+
+				}
 				CUCEventMgr::Instance().PushEvent(pEvent);			
 			}//lint !e429
 		}
@@ -499,6 +509,14 @@ TUP_VOID CNotifyCallBack::CallNotify(TUP_UINT32 msgid, TUP_UINT32 param1, TUP_UI
 			CUCEventMgr::Instance().PushEvent(pEvent);
 		}//lint !e429
 		break;
+	case CALL_E_EVT_SIPACCOUNT_WMI:
+		{
+			//////留言处理消息///////
+			INFO_LOG("CALL_E_EVT_SIPACCOUNT_WMI.");
+	//		CALL_S_MSG_WAIT_INFOS *pNotify = (CALL_S_MSG_WAIT_INFOS*)pBody;
+			
+		}//lint !e429
+		break;
 	case CALL_E_EVT_TO_UI_JOINT_START:
 		{
 			INFO_LOG("CALL_E_EVT_TO_UI_JOINT_START.");
@@ -521,6 +539,28 @@ TUP_VOID CNotifyCallBack::CallNotify(TUP_UINT32 msgid, TUP_UINT32 param1, TUP_UI
 			CUCEventMgr::Instance().PushEvent(pEvent);		
 		}//lint !e429
 		break;
+	case CALL_E_EVT_TO_UI_JOINT_ONLINE:
+		{
+			INFO_LOG("CALL_E_EVT_TO_UI_JOINT_ONLINE.");
+			CALL_S_JOINT_CMD_INFOS* pInfo = (CALL_S_JOINT_CMD_INFOS*)pBody;
+			CALL_S_JOINT_CMD_INFOS* pNotifyInfo = new CALL_S_JOINT_CMD_INFOS;
+			memcpy(pNotifyInfo,pInfo,sizeof(CALL_S_JOINT_CMD_INFOS));
+			UCPhoneJointEvent* pEvent = new UCPhoneJointEvent;
+			pEvent->SetPara(msgid,(TUP_VOID*)pNotifyInfo);
+			CUCEventMgr::Instance().PushEvent(pEvent);
+		}//lint !e429
+		break;
+	case CALL_E_EVT_TO_UI_JOINT_OFFLINE:
+		{
+			INFO_LOG("CALL_E_EVT_TO_UI_JOINT_OFFLINE.");
+			CALL_S_JOINT_CMD_INFOS* pInfo = (CALL_S_JOINT_CMD_INFOS*)pBody;
+			CALL_S_JOINT_CMD_INFOS* pNotifyInfo = new CALL_S_JOINT_CMD_INFOS;
+			memcpy(pNotifyInfo,pInfo,sizeof(CALL_S_JOINT_CMD_INFOS));
+			UCPhoneJointEvent* pEvent = new UCPhoneJointEvent;
+			pEvent->SetPara(msgid,(TUP_VOID*)pNotifyInfo);
+			CUCEventMgr::Instance().PushEvent(pEvent);
+		}
+		break;
 	case CALL_E_EVT_TO_UI_JOINT_ACCEPTCALL:
 		{
 			INFO_LOG("CALL_E_EVT_TO_UI_JOINT_ACCEPTCALL.");
@@ -538,7 +578,19 @@ TUP_VOID CNotifyCallBack::CallNotify(TUP_UINT32 msgid, TUP_UINT32 param1, TUP_UI
 		break;
 	case CALL_E_EVT_TO_UI_JOINT_OUTGOING:
 		{
-			INFO_LOG("CALL_E_EVT_TO_UI_JOINT_OUTGOING.");		
+			INFO_LOG("CALL_E_EVT_TO_UI_JOINT_OUTGOING.");
+			CALL_S_JOINT_CMD_INFOS* pInfo = (CALL_S_JOINT_CMD_INFOS*)pBody;
+			CALL_S_JOINT_CMD_INFOS* pNotifyInfo = new CALL_S_JOINT_CMD_INFOS;
+			memcpy(pNotifyInfo,pInfo,sizeof(CALL_S_JOINT_CMD_INFOS));
+			UCPhoneJointEvent* pEvent = new UCPhoneJointEvent;
+			pEvent->SetPara(msgid,(TUP_VOID*)pNotifyInfo);
+			CUCEventMgr::Instance().PushEvent(pEvent);
+		}//lint !e429
+		break;
+	case CALL_E_EVT_TO_UI_JOINT_HUNGUP:
+		{
+			INFO_LOG("CALL_E_EVT_TO_UI_JOINT_HUNGUP.");
+
 		}//lint !e429
 		break;
 	case CALL_E_EVT_TO_UI_JOINT_ESTABLISHED:
@@ -547,6 +599,13 @@ TUP_VOID CNotifyCallBack::CallNotify(TUP_UINT32 msgid, TUP_UINT32 param1, TUP_UI
 			CALL_S_JOINT_CMD_INFOS* pInfo = (CALL_S_JOINT_CMD_INFOS*)pBody;
 			CALL_S_JOINT_CMD_INFOS* pNotifyInfo = new CALL_S_JOINT_CMD_INFOS;
 			memcpy(pNotifyInfo,pInfo,sizeof(CALL_S_JOINT_CMD_INFOS));
+			//通知上层会议接通//////
+			UCCallConnectEvent* m_pEvent = new UCCallConnectEvent;
+			CALL_S_CALL_INFO* m_pInfo = new CALL_S_CALL_INFO;
+			m_pInfo->stCallStateInfo.enCallType = CALL_E_CALL_TYPE_IPAUDIO;
+			m_pEvent->SetPara(CALL_E_EVT_CALL_CONNECTED,pNotifyInfo->ulCallID,pNotifyInfo->ulConfID,(TUP_VOID*)pInfo);
+			CUCEventMgr::Instance().PushEvent(m_pEvent);
+			/////////通知上层会议接通//////
 			UCPhoneJointEvent* pEvent = new UCPhoneJointEvent;
 			pEvent->SetPara(msgid,(TUP_VOID*)pNotifyInfo);
 			CUCEventMgr::Instance().PushEvent(pEvent);
@@ -570,7 +629,7 @@ TUP_VOID CNotifyCallBack::CallNotify(TUP_UINT32 msgid, TUP_UINT32 param1, TUP_UI
 	case CALL_E_EVT_NEW_SERVICE_RIGHT:
 		{
 			INFO_LOG("CALL_E_EVT_NEW_SERVICE_RIGHT.");
-		}
+		}//lint !e429
 		break;
 	case CALL_E_EVT_SERVERCONF_CREATE_RESULT:
 		{
@@ -579,6 +638,7 @@ TUP_VOID CNotifyCallBack::CallNotify(TUP_UINT32 msgid, TUP_UINT32 param1, TUP_UI
 			if(pResult->ulResult == TUP_SUCCESS)
 			{
 				UCConfMgr::Instance().SetConfCreateResult(CONF_CREATE_SUCCESS);
+				UCConfMgr::Instance().SetChairmainRole(true);
 			}
 			else
 			{
@@ -722,6 +782,9 @@ TUP_VOID CNotifyCallBack::CallNotify(TUP_UINT32 msgid, TUP_UINT32 param1, TUP_UI
 				UCCallMgr::Instance().SetConfStart(true);
 				UCConfMgr::Instance().SetConfID(pResult->ulConfID);
 				UCCallMgr::Instance().SetCallID(pResult->ulCallID);
+				/////DTS2015080404109 将已经进入群组的成员上报界面 byc00327158 201508.5 Start//////
+				UCGroupMgr::Instance().NotifyAllMember(pResult->acGroupUri);
+				/////DTS2015080404109 将已经进入群组的成员上报界面 byc00327158 201508.5 End////////
 
 				IM_S_DISCUSSGROUP_NOTIFY* pInfo = new IM_S_DISCUSSGROUP_NOTIFY;
 				memset(pInfo,0,sizeof(IM_S_DISCUSSGROUP_NOTIFY));

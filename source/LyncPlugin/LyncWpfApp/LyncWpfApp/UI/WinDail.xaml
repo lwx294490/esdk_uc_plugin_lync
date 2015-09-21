@@ -19,7 +19,7 @@
         <Button  Height="43" HorizontalAlignment="Center"  Name="btnCall" VerticalAlignment="Center" ToolTip="{DynamicResource Call}"  Width="146" Grid.ColumnSpan="2" Grid.Row="1" Click="button_Click" >
             <Button.Content>
                 <StackPanel Orientation=" Horizontal">
-                    <Image Name ="imgCall" Tag="call"  Source="/LyncWpfApp;component/Image/call/call_1.png" ImageFailed="imgCall_ImageFailed" />
+                    <Image Name ="imgCall" Tag="call"  Source="/LyncWpfApp;component/Image/call/call_1.png"  />
                 </StackPanel>
             </Button.Content>
         </Button>

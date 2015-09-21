@@ -114,9 +114,9 @@ int UCCallMgr::InsertPhoneMember(const std::string& _phone)
 }
 int UCCallMgr::MakeCall(void)
 {
-	if(m_uiCallID > 0)
+	if(m_uiCallID > 0 || UCConfMgr::Instance().GetConfID()>0)
 	{
-		ERROR_LOG("you have in call now.");
+		ERROR_LOG("you have in call or conference now.");
 		return UC_SDK_Failed;
 	}
 	size_t nMemberCount = m_MemBindNOList.size();
@@ -221,7 +221,7 @@ int UCCallMgr::TransCallToConf(EM_MemberType _memberType,const std::string& strA
 	{
 		isConfStart = true;
 	}
-	return UC_SDK_Success;
+	return iRet;
 }
 
 int UCCallMgr::TransCallToConf(std::vector<std::string>& vecUCMember,std::vector<std::string>& vecPhoneMember)
@@ -281,12 +281,38 @@ int UCCallMgr::TransCallToConf(std::vector<std::string>& vecUCMember,std::vector
 int UCCallMgr::HoldCall(void)
 {
 	CHECK_CALLID_RETURN(m_uiCallID,UC_SDK_Failed);
+	if(m_iCallStatus == VIDEOCALL)
+	{
+		/////如果是视频呼叫，则降级视频会话为音频会话//////
+		TUP_RESULT tRet = tup_call_del_video(m_uiCallID);
+		if(TUP_SUCCESS !=tRet)
+		{
+			ERROR_LOG("tup_call_del_video Failed.");
+			return UC_SDK_Failed;
+		}
+		int m_Count = 15;
+		while((AUDIOCALL != m_iCallStatus)&&m_Count)
+		{
+			///////延时，等待视频降级为音频成功//最长延时为3000毫秒///
+			Sleep(200);
+			m_Count --;
+		}
+		if (m_Count <= 0)
+		{
+			return UC_SDK_Failed;
+		}
+	}
 
-	if(tup_call_hold_call(m_uiCallID) != TUP_SUCCESS)
+	if( tup_call_hold_call(m_uiCallID) != TUP_SUCCESS)
 	{
 		ERROR_LOG("tup_call_hold_call Failed.");
 		return UC_SDK_Failed;
 	}
+	
+	/////播放呼叫保持铃音 by c00327158  2015.8.5 Start/////
+	UCPlayMgr::Instance().StartPlayHoldCall();
+	/////播放呼叫保持铃音 by c00327158  2015.8.5 End/////
+
 
 	return UC_SDK_Success;
 }
@@ -299,6 +325,10 @@ int UCCallMgr::ResumeCall(void)
 		ERROR_LOG("tup_call_unhold_call Failed.");
 		return UC_SDK_Failed;
 	}
+
+	/////停止呼叫保持铃音 by c00327158  2015.8.5 Start/////
+	UCPlayMgr::Instance().EndPlayHoldCall();
+	/////停止呼叫保持铃音 by c00327158  2015.8.5 End/////
 	return UC_SDK_Success;	
 }
 
@@ -320,11 +350,13 @@ int UCCallMgr::MakeVideoCall(const STVideoWindow& stLocalWnd, const STVideoWindo
 	{
 		UCMemList::iterator it = m_MemBindNOList.begin();
 		bindno = (*it).second;
+		INFO_LOG("UC Video Call!");
 	}
 	if (0 == nMemberCount && 1 == nPhoneNum)//呼叫单个电话
 	{
 		PhoneMemList::iterator it = m_MemPhoneList.begin();
 		bindno = (*it);
+		INFO_LOG("Phone Video Call!");
 	}
 
 	CALL_S_VIDEOWND_INFO videoWndInfo[2];
@@ -401,10 +433,12 @@ bool UCCallMgr::GetConvStarted()const
 int UCCallMgr::HangupCall(void)
 {
 	DEBUG_TRACE("");
+    CHECK_CALLID_RETURN(m_uiCallID,UC_SDK_Failed);
 
 	//停止响铃
 	(void)UCPlayMgr::Instance().EndPlayIncoming();
 	(void)UCPlayMgr::Instance().EndPlayRingBack();
+	(void)UCPlayMgr::Instance().EndPlayHoldCall();
 
 	//是会议，则先结束会议
 	if(isConfStart)
@@ -455,6 +489,7 @@ int UCCallMgr::AcceptCall(void)
 	//停止响铃
 	(void)UCPlayMgr::Instance().EndPlayIncoming();
 	(void)UCPlayMgr::Instance().EndPlayRingBack();
+	(void)UCPlayMgr::Instance().EndPlayHoldCall();
 	TUP_RESULT tRet = tup_call_accept_call(m_uiCallID,TUP_FALSE);
 	if(tRet != TUP_SUCCESS)
 	{
@@ -514,10 +549,7 @@ int UCCallMgr::AcceptVideoCall(const STVideoWindow& stLocalWnd,const STVideoWind
 		pEvent->SetVideoStatus(CALL_VIDEO_CONNECTED);
 		CUCEventMgr::Instance().PushEvent(pEvent);
 	}
-	
-	
 	return UC_SDK_Success;
-
 }
 int UCCallMgr::RejectCall(void)
 {
@@ -526,6 +558,7 @@ int UCCallMgr::RejectCall(void)
 	//停止响铃
 	(void)UCPlayMgr::Instance().EndPlayIncoming();
 	(void)UCPlayMgr::Instance().EndPlayRingBack();
+	(void)UCPlayMgr::Instance().EndPlayHoldCall();
 
 
 	TUP_RESULT tRet = tup_call_end_call(m_uiCallID);
@@ -568,55 +601,119 @@ int UCCallMgr::RejectVideoCall(void)
 int UCCallMgr::SendDTMF(char tone)
 {
 	CHECK_CALLID_RETURN(m_uiCallID,UC_SDK_Failed);
+	//////按键音本地地址/////
+	std::string strPlayFile;
+	eSDKTool::getCurrentPath(strPlayFile);
+	TUP_INT32 tupHandle=0;
 
 	CALL_E_DTMF_TONE dtmfTone;
 	if(tone == '0')
 	{
 		dtmfTone = CALL_E_DTMF0;
+		////播放本地按键音/////
+		strPlayFile = strPlayFile+"\\audio\\Key\\0.wav";
+		(void)tup_call_media_startplay(0,strPlayFile.c_str(),&tupHandle);
+		Sleep(200);
+		(void)tup_call_media_stopplay(tupHandle);
 	}
 	else if(tone == '1')
 	{
 		dtmfTone = CALL_E_DTMF1;
+		////播放本地按键音/////
+		strPlayFile = strPlayFile+"\\audio\\Key\\1.wav";
+		(void)tup_call_media_startplay(1,strPlayFile.c_str(),&tupHandle);
+		Sleep(200);
+		(void)tup_call_media_stopplay(tupHandle);
 	}
 	else if(tone == '2')
 	{
 		dtmfTone = CALL_E_DTMF2;
+		////播放本地按键音/////
+		strPlayFile = strPlayFile+"\\audio\\Key\\2.wav";
+		(void)tup_call_media_startplay(1,strPlayFile.c_str(),&tupHandle);
+		Sleep(200);
+		(void)tup_call_media_stopplay(tupHandle);
 	}
 	else if(tone == '3')
 	{
 		dtmfTone = CALL_E_DTMF3;
+		////播放本地按键音/////
+		strPlayFile = strPlayFile+"\\audio\\Key\\3.wav";
+		(void)tup_call_media_startplay(1,strPlayFile.c_str(),&tupHandle);
+		Sleep(200);
+		(void)tup_call_media_stopplay(tupHandle);
 	}
 	else if(tone == '4')
 	{
 		dtmfTone = CALL_E_DTMF4;
+		////播放本地按键音/////
+		strPlayFile = strPlayFile+"\\audio\\Key\\4.wav";
+		(void)tup_call_media_startplay(1,strPlayFile.c_str(),&tupHandle);
+		Sleep(200);
+		(void)tup_call_media_stopplay(tupHandle);
 	}
 	else if(tone == '5')
 	{
 		dtmfTone = CALL_E_DTMF5;
+		////播放本地按键音/////
+		strPlayFile = strPlayFile+"\\audio\\Key\\5.wav";
+		(void)tup_call_media_startplay(1,strPlayFile.c_str(),&tupHandle);
+		Sleep(200);
+		(void)tup_call_media_stopplay(tupHandle);
 	}
 	else if(tone == '6')
 	{
 		dtmfTone = CALL_E_DTMF6;
+		////播放本地按键音/////
+		strPlayFile = strPlayFile+"\\audio\\Key\\6.wav";
+		(void)tup_call_media_startplay(1,strPlayFile.c_str(),&tupHandle);
+		Sleep(200);
+		(void)tup_call_media_stopplay(tupHandle);
 	}
 	else if(tone == '7')
 	{
 		dtmfTone = CALL_E_DTMF7;
+		////播放本地按键音/////
+		strPlayFile = strPlayFile+"\\audio\\Key\\7.wav";
+		(void)tup_call_media_startplay(1,strPlayFile.c_str(),&tupHandle);
+		Sleep(200);
+		(void)tup_call_media_stopplay(tupHandle);
 	}
 	else if(tone == '8')
 	{
 		dtmfTone = CALL_E_DTMF8;
+		////播放本地按键音/////
+		strPlayFile = strPlayFile+"\\audio\\Key\\8.wav";
+		(void)tup_call_media_startplay(1,strPlayFile.c_str(),&tupHandle);
+		Sleep(200);
+		(void)tup_call_media_stopplay(tupHandle);
 	}
 	else if(tone == '9')
 	{
 		dtmfTone = CALL_E_DTMF9;
+		////播放本地按键音/////
+		strPlayFile = strPlayFile+"\\audio\\Key\\9.wav";
+		(void)tup_call_media_startplay(1,strPlayFile.c_str(),&tupHandle);
+		Sleep(200);
+		(void)tup_call_media_stopplay(tupHandle);
 	}
 	else if(tone == '*')
 	{
 		dtmfTone = CALL_E_DTMFSTAR;
+		////播放本地按键音/////
+		strPlayFile = strPlayFile+"\\audio\\Key\\Xin.wav";
+		(void)tup_call_media_startplay(1,strPlayFile.c_str(),&tupHandle);
+		Sleep(200);
+		(void)tup_call_media_stopplay(tupHandle);
 	}
 	else if(tone == '#')
 	{
 		dtmfTone = CALL_E_DTMFJIN;
+		////播放本地按键音/////
+		strPlayFile = strPlayFile+"\\audio\\Key\\Jin.wav";
+		(void)tup_call_media_startplay(1,strPlayFile.c_str(),&tupHandle);
+		Sleep(200);
+		(void)tup_call_media_stopplay(tupHandle);
 	}
 	else
 	{
@@ -636,7 +733,7 @@ int UCCallMgr::SendDTMF(char tone)
 }
 int UCCallMgr::ForwardCall(EM_MemberType iMemberType, const std::string& strNum)
 {
-	CHECK_CALLID_RETURN(m_uiCallID,UC_SDK_Failed);
+	CHECK_CALLID_RETURN(m_uiCallID,UC_SDK_Failed); 
 
 	if (UC_ACCOUNT == iMemberType)
 	{
@@ -671,6 +768,30 @@ int UCCallMgr::ForwardCall(EM_MemberType iMemberType, const std::string& strNum)
 int UCCallMgr::BlindTransCall(EM_MemberType iMemberType, const std::string& strNum)
 {
 	DEBUG_TRACE("");
+	//////接通后前转只支持音频前转   byc00327158  2015.8.6 Start///////// 
+	if(m_iCallStatus == VIDEOCALL)
+	{
+		/////如果是视频呼叫，则降级视频会话为音频会话//////
+		TUP_RESULT tRet = tup_call_del_video(m_uiCallID);
+		if(TUP_SUCCESS !=tRet)
+		{
+			ERROR_LOG("tup_call_del_video Failed.");
+			return UC_SDK_Failed;
+		}
+		int m_Count = 15;
+		while((AUDIOCALL != m_iCallStatus)&&m_Count)
+		{
+			///////延时，等待视频降级为音频成功//最长延时为3000毫秒///
+			Sleep(200);
+			m_Count --;
+		}
+		if (m_Count <= 0)
+		{
+			return UC_SDK_Failed;
+		}
+	}
+
+	//////接通后前转只支持音频前转   byc00327158  2015.8.6 End/////////
 
 	std::string bindcall;
 

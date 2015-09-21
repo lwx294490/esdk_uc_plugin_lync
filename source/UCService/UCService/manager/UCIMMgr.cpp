@@ -26,7 +26,7 @@ int UCIMMgr::SendP2PIM(const std::string& _account
 {
 	DEBUG_TRACE("");
 
-	IM_S_SENDIM_ARG SendImArg;
+	IM_S_SENDIM_ARG SendImArg = {0};
 	SendImArg.chatType = IM_E_IM_CHAT_TYPE_SINGLE;
 	SendImArg.contentType = IM_E_IM_CHAT_CONTENT_TYPE_TEXT;
 	SendImArg.sourceFlag = IM_E_IM_CHAT_SOURCE_FLAG_IM_DIALOG;
@@ -85,13 +85,13 @@ int UCIMMgr::SetFileTransCallBack(FileTransNotifyCB _cb)
 	return UC_SDK_Success;
 }
 
-int UCIMMgr::AcceptFile(const std::string& convid
+int UCIMMgr::AcceptFile(const std::string& _account
 							,const std::string& /*tranid*/
 							,const std::string& filesavepath)
 {
-	IM_S_ACCEPTP2PFILE_ARG arg;
-	memcpy_s(arg.fileInfo.account,convid.size(),convid.c_str(),IM_D_MAX_ACCOUNT_LENGTH);
-	memcpy_s(arg.fileInfo.filePath,filesavepath.size(),filesavepath.c_str(),IM_D_MAX_FILEPATH_LENGTH);
+	IM_S_ACCEPTP2PFILE_ARG arg = {0};
+	memcpy_s(arg.fileInfo.account,IM_D_MAX_ACCOUNT_LENGTH,_account.c_str(),_account.size());
+	memcpy_s(arg.fileInfo.filePath,IM_D_MAX_FILEPATH_LENGTH,filesavepath.c_str(),filesavepath.size());
 	TUP_RESULT tRet = tup_im_acceptp2pfile(&arg);
 	if(TUP_SUCCESS != tRet)
 	{
@@ -100,11 +100,11 @@ int UCIMMgr::AcceptFile(const std::string& convid
 	}
 	return UC_SDK_Success;
 }
-int UCIMMgr::RejectFile(const std::string& convid,const std::string& tranid)
+int UCIMMgr::RejectFile(const std::string& _account,const std::string& _filepath)
 {
-	IM_S_REJECTP2PFILE_ARG arg;
-	memcpy_s(arg.fileInfo.account,convid.size(),convid.c_str(),IM_D_MAX_ACCOUNT_LENGTH);
-	memcpy_s(arg.fileInfo.filePath,tranid.size(),tranid.c_str(),IM_D_MAX_FILEPATH_LENGTH);
+	IM_S_REJECTP2PFILE_ARG arg = {0};
+	memcpy_s(arg.fileInfo.account,IM_D_MAX_ACCOUNT_LENGTH,_account.c_str(),_account.size());
+	memcpy_s(arg.fileInfo.filePath,IM_D_MAX_FILEPATH_LENGTH,_filepath.c_str(),_filepath.size());
 
 	TUP_RESULT tRet = tup_im_rejectp2pfile(&arg);
 	if(TUP_SUCCESS != tRet)
@@ -115,11 +115,11 @@ int UCIMMgr::RejectFile(const std::string& convid,const std::string& tranid)
 
 	return UC_SDK_Success;
 }
-int UCIMMgr::CancelFile(const std::string& convid,const std::string& tranid)
+int UCIMMgr::CancelFile(const std::string&_account,const std::string& _filepath)
 {
-	IM_S_CANCELP2PFILE_ARG arg;
-	memcpy_s(arg.fileInfo.account,convid.size(),convid.c_str(),IM_D_MAX_ACCOUNT_LENGTH);
-	memcpy_s(arg.fileInfo.filePath,tranid.size(),tranid.c_str(),IM_D_MAX_FILEPATH_LENGTH);
+	IM_S_CANCELP2PFILE_ARG arg = {0};
+	memcpy_s(arg.fileInfo.account,IM_D_MAX_ACCOUNT_LENGTH,_account.c_str(),_account.size());
+	memcpy_s(arg.fileInfo.filePath,IM_D_MAX_FILEPATH_LENGTH,_filepath.c_str(),_filepath.size());
 	TUP_RESULT tRet = tup_im_cancelp2pfile(&arg);
 	if(TUP_SUCCESS != tRet)
 	{

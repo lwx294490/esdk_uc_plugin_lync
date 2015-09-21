@@ -4,6 +4,9 @@
 #include "UCCallMgr.h"
 #include "UCConfMgr.h"
 #include "UCPlayMgr.h"
+#include "Group.h"
+#include "UCGroupMgr.h"
+#include "UCRegMgr.h"
 
 UCCallIncomingEvent::UCCallIncomingEvent(void):m_msgid(0)
 	,m_param1(0)
@@ -45,6 +48,11 @@ bool UCCallIncomingEvent::DoHandle(void)
 			UCCallMgr::Instance().SetCallID(m_param1);
 			UCConfMgr::Instance().SetConfID(0);
 			UCConfMgr::Instance().SetGroupID("");
+			////////DTS2015071401729 by c00327158 增加话机拨打软终端时话机端听到回铃音///////
+			if (TUP_SUCCESS != tup_call_alerting_call(pInfo->stCallStateInfo.ulCallID))
+			{
+				ERROR_LOG("tup_call_alerting_call Failed");
+			}
 			SAFE_DELETE(pInfo);
 			break;
 		}
@@ -64,6 +72,66 @@ bool UCCallIncomingEvent::DoHandle(void)
 			UCCallMgr::Instance().SetConfStart(true);
 			UCConfMgr::Instance().SetConfID(pInfo->ulConfID);
 			UCConfMgr::Instance().SetGroupID(pInfo->acGroupUri);
+			//////重新呼叫方式入会的，重新创建本地群组//////
+			std::string m_strGroupID(pInfo->acGroupUri);
+			Group* GroupBean = UCGroupMgr::Instance().GetGroupByID(m_strGroupID);
+			if(NULL == GroupBean)
+			{
+				IM_S_IMGROUPINFO m_infoArg = {0};
+				TUP_RESULT tRet = tup_im_getfixedgroupdetail(pInfo->acGroupUri,&m_infoArg);
+				//////创建本地群组/////
+				Group* pGroup = new Group;
+				pGroup->m_strOwner = m_infoArg.owner;
+				pGroup->m_strGroupName = m_infoArg.name;
+				pGroup->m_strGroupID = m_infoArg.id;
+				UCGroupMgr::Instance().AddGroupINGrouplist(m_infoArg.id,pGroup);
+                ////增加群组成员//////
+				IM_S_REQUESTIMGROUPMEMBERS_ARG arg={0};
+				IM_S_GROUPUSERLIST ack={0};
+				arg.isSyncAll = TUP_TRUE;
+				strcpy_s(arg.groupID, IM_D_GROUPID_LENGTH, m_strGroupID.c_str());
+				strcpy_s(arg.timpstamp,IM_D_MAX_TIMESTAMP_LENGTH,"19000000000000");
+				//只能查询UC账户
+				 tRet = tup_im_getfixedgroupmembers(&arg,&ack);
+				if(tRet != TUP_SUCCESS)
+				{
+					ERROR_LOG("----tup_im_getfixedgroupmembers failed.");
+					return false;		
+				}
+
+                TUP_S_LIST* list =  ack.memberInfo;
+				while(list != NULL)
+				{
+					IM_S_GroupUserInfo* groupUser = (IM_S_GroupUserInfo*)list->data;
+					if(NULL != groupUser)
+					{
+						STConfParam item;
+						std::string strAccount = groupUser->userInfo.account;
+						INFO_LOG("----GroupID:%s,GroupMember:%s",m_strGroupID.c_str(),strAccount.c_str());
+						if(strAccount.empty())
+						{
+							ERROR_LOG("----strAccount is empty");
+						}
+						else
+						{		
+							if(!UCGroupMgr::Instance().IsInGroupUCMember(m_strGroupID,strAccount))
+							{
+								item.memStatus = CONF_MEM_ADD;
+								item.memType = UC_ACCOUNT;
+								strcpy_s(item.ucAcc,STRING_LENGTH,strAccount.c_str());
+								UCGroupMgr::Instance().AddLocalUCMember(m_strGroupID,strAccount,groupUser->userInfo.bindNO);
+								if(m_strGroupID == UCConfMgr::Instance().GetGroupID())
+								{
+									(void)UCRegMgr::Instance().SubscribeStatus(strAccount);
+									UCConfMgr::Instance().NotifyConfUI(item);
+								}
+							}						
+						}					
+					}
+					list = list->next;
+				}
+
+			}
 			SAFE_DELETE(pInfo);
 			break;
 		}

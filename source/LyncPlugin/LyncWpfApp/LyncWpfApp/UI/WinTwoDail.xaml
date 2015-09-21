@@ -16,7 +16,7 @@
             <ColumnDefinition></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
-        <TextBox Grid.ColumnSpan="3" Height="30" HorizontalAlignment="Right" Name="txtNumber" VerticalAlignment="Center" Width="179" Margin="0,5,25,5" BorderBrush="Black" FontSize="18"  TextChanged="txtNumber_TextChanged" VerticalContentAlignment="Center" />
+        <TextBox Grid.ColumnSpan="3" Height="30" HorizontalAlignment="Right" Name="txtNumber" VerticalAlignment="Center" Width="179" Margin="0,5,25,5" BorderBrush="Black" FontSize="18"  TextChanged="txtNumber_TextChanged" VerticalContentAlignment="Center"  />
         <Button Grid.Row="1" Name="button3" Height="43" HorizontalAlignment="Center"   VerticalAlignment="Center" Width="66" FontSize="18" Click="button_Click">
             <Button.Content>
                 <StackPanel Orientation=" Horizontal">

@@ -18,6 +18,7 @@ namespace LyncWpfApp
        public ICommand PlayCommand { get; set; }
        public ICommand OpenPathCommand { get; set; }
        public WinOptionSetting winOptionSetting { get; set; }
+       //FrmToolBar FrmToolBar;   //2015/8/11
        int count = 10;
        public WinOptionSettingViewModel(WinOptionSetting window)
        {
@@ -189,6 +190,16 @@ namespace LyncWpfApp
                {
                    RegistryKey runKey = Registry.LocalMachine.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run");
                    runKey.SetValue("LyncWpfApp.exe", System.Windows.Forms.Application.StartupPath + "\\LyncWpfApp.exe");
+                   //如果Lync插件自启动，那么就算Lync设置了自启动也不能让它运行   modify by 00327190   2015/8/6
+                   RegistryKey runKey1 = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
+                   if (null != runKey1 && null != runKey1.GetValue("LyncWpfApp.exe"))
+                   {
+                       RegistryKey runKey2 = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
+                       if (null != runKey2 && null != runKey2.GetValue("Lync"))
+                       {
+                           runKey2.DeleteValue("Lync");
+                       }
+                   }      
                }
                else
                {
@@ -304,6 +315,56 @@ namespace LyncWpfApp
                }
                winOptionSetting.radCallForwardOfflineEn.IsChecked = (string.IsNullOrEmpty(data.Num) ? false : true);
                winOptionSetting.txtCallForwardOffline.Text = data.Num;
+
+               //modify by 00327190   2015/7/30
+               type = ForwardServiceType.VOICEMAIL_UNCONDITION;  //无条件语音邮箱前转
+               data = new STCallExData();
+               iRet = call.GetCallExService((int)type, ref data);
+               if (iRet != (int)UCServiceRetvCode.UC_SDK_Success)
+               {
+                   LogManager.SystemLog.Error("GetCallExService error");
+                   return;
+               }
+               winOptionSetting.radVoiceForwardUnCondEn.IsChecked = (string.IsNullOrEmpty(data.Num) ? false : true);
+               //winOptionSetting.txtVoiceForwardUnCond.Text = data.Num;   //2015/8/24
+
+               // 无应答语音邮箱前转
+               type = ForwardServiceType.VOICEMAIL_NOREPLY;  
+               data = new STCallExData();
+               iRet = call.GetCallExService((int)type, ref data);
+               if (iRet != (int)UCServiceRetvCode.UC_SDK_Success)
+               {
+                   LogManager.SystemLog.Error("GetCallExService error");
+                   return;
+               }
+               winOptionSetting.radVoiceForwardNoReplyEn.IsChecked = (string.IsNullOrEmpty(data.Num) ? false : true);
+               //winOptionSetting.txtVoiceForwardNoReply.Text = data.Num;   //2015/8/24
+
+               // 遇忙语音邮箱前转
+               type = ForwardServiceType.VOICEMAIL_ONBUSY;
+               data = new STCallExData();
+               iRet = call.GetCallExService((int)type, ref data);
+               if (iRet != (int)UCServiceRetvCode.UC_SDK_Success)
+               {
+                   LogManager.SystemLog.Error("GetCallExService error");
+                   return;
+               }
+               winOptionSetting.radVoiceForwardBusyEn.IsChecked = (string.IsNullOrEmpty(data.Num) ? false : true);
+               //winOptionSetting.txtVoiceForwardBusy.Text = data.Num;   //2015/8/24
+
+               // 离线语音邮箱前转
+               type = ForwardServiceType.VOICEMAIL_OFFLINE;
+               data = new STCallExData();
+               iRet = call.GetCallExService((int)type, ref data);
+               if (iRet != (int)UCServiceRetvCode.UC_SDK_Success)
+               {
+                   LogManager.SystemLog.Error("GetCallExService error");
+                   return;
+               }
+               winOptionSetting.radVoiceForwardOfflineEn.IsChecked = (string.IsNullOrEmpty(data.Num) ? false : true);
+               //winOptionSetting.txtVoiceForwardOffline.Text = data.Num;   //2015/8/24
+
+              
            }
            catch (System.Exception ex)
            {

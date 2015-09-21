@@ -46,7 +46,7 @@
                     </Grid>
                 </ControlTemplate>
             </TabControl.Template>
-            <TabItem Name="tabItemCall"  Header="{DynamicResource CallHistory}" FontSize="13"  Height="35"  DockPanel.Dock="Left" Width="185" Margin="0,0,-350,0" Style="{DynamicResource TabItemCall}">
+            <TabItem Name="tabItemCall"  Header="{DynamicResource CallHistory}" FontSize="13"  Height="35"  DockPanel.Dock="Left" Width="215" Margin="0,0,-350,0" Style="{DynamicResource TabItemCall}">
              
                 <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="726">
                     <Grid.RowDefinitions>
@@ -73,7 +73,7 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="{DynamicResource Name}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150" Width="150"  >
+                                        <DataGridTemplateColumn Header="{DynamicResource Name}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150"  Width="Auto"  >
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
@@ -82,7 +82,7 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="{DynamicResource Time}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150" Width="150"  >
+                                        <DataGridTemplateColumn Header="{DynamicResource Time}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150"  Width="Auto" >
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
@@ -91,7 +91,7 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="{DynamicResource Duration}"   CanUserResize="True" CanUserSort="False" IsReadOnly="True" MinWidth="90" Width="90"  >
+                                        <DataGridTemplateColumn Header="{DynamicResource Duration}"   CanUserResize="True" CanUserSort="False" IsReadOnly="True" MinWidth="90"  Width="Auto"  >
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
@@ -152,7 +152,7 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="{DynamicResource Name}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150" Width="150"  >
+                                        <DataGridTemplateColumn Header="{DynamicResource Name}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150"  Width="Auto"   >
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
@@ -161,7 +161,7 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="{DynamicResource Time}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150" Width="150"  >
+                                        <DataGridTemplateColumn Header="{DynamicResource Time}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150"  Width="Auto"   >
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
@@ -170,7 +170,7 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="{DynamicResource Duration}"   CanUserResize="True" CanUserSort="False" IsReadOnly="True" MinWidth="90" Width="90"  >
+                                        <DataGridTemplateColumn Header="{DynamicResource Duration}"   CanUserResize="True" CanUserSort="False" IsReadOnly="True" MinWidth="90"  Width="Auto"   >
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
@@ -214,7 +214,7 @@
                         </TabItem>
                         <TabItem Header="{DynamicResource Dialed}" Name="tabItemDialed" Width="85" HorizontalAlignment="Stretch"  HorizontalContentAlignment="Stretch" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" Style="{DynamicResource tabitem}">
                             <DataGrid HorizontalAlignment="Stretch" Name="listDialed"  HorizontalContentAlignment="Stretch" AutoGenerateColumns="False"  DataContext="{Binding}" ItemsSource="{Binding}" VerticalAlignment="Stretch"  VerticalContentAlignment="Stretch"  HorizontalScrollBarVisibility="Visible" CanUserResizeRows="False" CanUserAddRows="False"  CanUserSortColumns="False" CanUserReorderColumns="False" SelectionMode="Single" AlternationCount="2" GridLinesVisibility="None"
-                             ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyleCustom}"  PreviewMouseRightButtonDown="Grid_PreviewMouseRightButtonDown" Width="636">
+                             ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyleCustom}"  PreviewMouseRightButtonDown="Grid_PreviewMouseRightButtonDown" Width="634">
                                 <DataGrid.Columns>
                                     <DataGridTemplateColumn Header="{DynamicResource Phone}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="192" Width="Auto"  >
                                         <DataGridTemplateColumn.CellTemplate>
@@ -226,7 +226,7 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="{DynamicResource Name}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150" Width="150"  >
+                                    <DataGridTemplateColumn Header="{DynamicResource Name}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150"  Width="Auto"   >
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
@@ -235,7 +235,7 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="{DynamicResource Time}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150" Width="150"  >
+                                    <DataGridTemplateColumn Header="{DynamicResource Time}"   CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150"  Width="Auto"   >
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
@@ -244,7 +244,7 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="{DynamicResource Duration}"  CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="90" Width="90"  >
+                                    <DataGridTemplateColumn Header="{DynamicResource Duration}"  CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="90"  Width="Auto"   >
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
@@ -299,7 +299,7 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="{DynamicResource Name}"  CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150" Width="150"  >
+                                    <DataGridTemplateColumn Header="{DynamicResource Name}"  CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150"  Width="Auto"   >
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
@@ -308,7 +308,7 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="{DynamicResource Time}"  CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150" Width="150"  >
+                                    <DataGridTemplateColumn Header="{DynamicResource Time}"  CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="150"  Width="Auto"   >
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
@@ -317,7 +317,7 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="{DynamicResource Duration}"  CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="90" Width="90"  >
+                                    <DataGridTemplateColumn Header="{DynamicResource Duration}"  CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="90"  Width="Auto"   >
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
@@ -361,7 +361,7 @@
                     </TabControl>
                 </Grid>
             </TabItem>
-            <TabItem Name="tabItemHistory" Header="{DynamicResource ConferenceHistory}" FontSize="13"  DockPanel.Dock="Left" Height="35"  Margin="0,-0,-5,0"  Width="185" Style="{DynamicResource TabItemConference}" 
+            <TabItem Name="tabItemHistory" Header="{DynamicResource ConferenceHistory}" FontSize="13"  DockPanel.Dock="Left" Height="35"  Margin="0,-0,-35,0"  Width="215" Style="{DynamicResource TabItemConference}" 
   
                 >
                 <Grid Width="743">
@@ -386,7 +386,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="{DynamicResource ConferenceStartTime}"  CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="160" Width="160"  >
+                            <DataGridTemplateColumn Header="{DynamicResource ConferenceStartTime}"  CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="160"  Width="Auto"   >
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
@@ -395,7 +395,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="{DynamicResource Duration}"  CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="90" Width="90"  >
+                            <DataGridTemplateColumn Header="{DynamicResource Duration}"  CanUserResize="False" CanUserSort="False" IsReadOnly="True" MinWidth="90"  Width="Auto"   >
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel  Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" >
@@ -475,7 +475,7 @@
             </TabItem>
         </TabControl>
         <Button Content="{DynamicResource Refresh}" Grid.Row="1" Height="23" Command="{Binding RefreshCommand}"  Name="refresh" ToolTip="{DynamicResource Refresh}"  HorizontalAlignment="Left" VerticalAlignment="Center" Width="75" Margin="301,6,0,6" />
-        <Button Content="{DynamicResource Clear}" Grid.Row="1" Height="23"  Command="{Binding ClearCommand}" ToolTip="{DynamicResource Clear}" Name="clear" HorizontalAlignment="Right" VerticalAlignment="Center" Width="75" Margin="0,6,281,6" />
+        <Button Content="{DynamicResource Clear}" Grid.Row="1" Height="23"  Command="{Binding ClearCommand}" ToolTip="{DynamicResource Clear}" Name="clear" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75" Margin="378,6,0,6" />
         <DatePicker Grid.Row="1" Height="25" HorizontalAlignment="Left" Margin="84,2,0,0" Name="dateTimeFrom" VerticalAlignment="Center" Width="100" Visibility="Hidden" />
         <DatePicker Grid.Row="1" Height="25" HorizontalAlignment="Left" Margin="196,2,0,0" Name="dateTimeTo" VerticalAlignment="Center" Width="100" Visibility="Hidden" />
         <Label Content="~" Height="28" Visibility="Hidden"  HorizontalAlignment="Left" Margin="181,6,0,1" Name="label1" VerticalAlignment="Center" Grid.Row="1" />
@@ -503,13 +503,13 @@
             </Button.Content>
         </Button>
 
-        <Button Grid.Row="1" Width="22" Height="20"  HorizontalAlignment="Left"    HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Name="BtnLast"  Margin="639,7,17,8" Click="imgLast_MouseLeftButtonUp">
+        <Button Grid.Row="1" Width="22" Height="20"  HorizontalAlignment="Left"    HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Name="BtnLast"  Margin="639,7,17,8" Click="imgLast_MouseLeftButtonUp" ToolTip="{DynamicResource LastPage}" >
             <Button.Content>
                 <Image Source="/Image/history/page-last-select.gif" Width="16" Height="16" Grid.Row="1" Name ="imgLast" ></Image>
             </Button.Content>
         </Button>
 
-        <TextBox Grid.Row="1" Height="23" HorizontalAlignment="Left" Margin="506,7,0,0" Name="txtPage" VerticalAlignment="Top" Width="32" KeyDown="txtNumber_KeyDown"  ToolTip="{DynamicResource LastPage}"  TextChanged="txtNumber_TextChanged"/>
+        <TextBox Grid.Row="1" Height="23" HorizontalAlignment="Left" Margin="506,7,0,0" Name="txtPage" VerticalAlignment="Top" Width="32" KeyDown="txtNumber_KeyDown"    TextChanged="txtNumber_TextChanged"/>
         <Label Content="/" Grid.Row="1" Name="labTotal"  Height="28" HorizontalAlignment="Left" Margin="540,4,0,0"  VerticalAlignment="Top" Width="46" />
      
     </Grid>

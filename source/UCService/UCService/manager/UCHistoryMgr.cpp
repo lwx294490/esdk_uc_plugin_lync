@@ -664,15 +664,19 @@ int UCHistoryMgr::QueryCallHistory(int _CallType,int _FromIndex,int _toIndex, ST
 		_queryResult->stCallHistory[i].startTime.second = recd.time.second;
 
 		//callname
+//		std::string peerName = eSDKTool::utf8str2unicodestr(recd.peerName);
+		std::string peerName = recd.peerName;
 		memset(_queryResult->stCallHistory[i].CallName,0,STRING_LENGTH);
-		memcpy_s(_queryResult->stCallHistory[i].CallName,STRING_LENGTH,recd.peerName.c_str(),(recd.peerName.size()<(STRING_LENGTH)) ? (recd.peerName.size()) : (STRING_LENGTH-1));
+		memcpy_s(_queryResult->stCallHistory[i].CallName,STRING_LENGTH,peerName.c_str(),(peerName.size()<(STRING_LENGTH)) ? (peerName.size()) : (STRING_LENGTH-1));
 
 		//account
+//		std::string account = eSDKTool::utf8str2unicodestr(recd.peerId);
 		std::string account = recd.peerId;
 		memset(_queryResult->stCallHistory[i].ucAccount,0,STRING_LENGTH);
 		memcpy_s(_queryResult->stCallHistory[i].ucAccount,STRING_LENGTH,account.c_str(),(account.size()<(STRING_LENGTH)) ? (account.size()) : (STRING_LENGTH-1));
 
 		//callNum，这里使用peerId，是因为当记录创建时，如果是IPphone呼叫就会创建号码
+//		std::string bindNum = eSDKTool::utf8str2unicodestr(recd.peerId);
 		std::string bindNum = recd.peerId;
 		memset(_queryResult->stCallHistory[i].CallNum,0,STRING_LENGTH);
 		memcpy_s(_queryResult->stCallHistory[i].CallNum,STRING_LENGTH,bindNum.c_str(),(bindNum.size()<(STRING_LENGTH)) ? (bindNum.size()) : (STRING_LENGTH-1));
@@ -769,11 +773,15 @@ int UCHistoryMgr::QueryConvHistory(int _FromIndex,
 
 
 		memset(_queryResult->stConvHistory[i].convID,0,STRING_LENGTH);
-		memcpy_s(_queryResult->stConvHistory[i].convID,STRING_LENGTH,cvs.cvsId.c_str(),(cvs.cvsId.size()<(STRING_LENGTH)) ? (cvs.cvsId.size()) : (STRING_LENGTH-1));
+//		std::string unicodecvsid = eSDKTool::utf8str2unicodestr(cvs.cvsId);
+		std::string unicodecvsid = cvs.cvsId;
+		memcpy_s(_queryResult->stConvHistory[i].convID,STRING_LENGTH,unicodecvsid.c_str(),(unicodecvsid.size()<(STRING_LENGTH)) ? (unicodecvsid.size()) : (STRING_LENGTH-1));
 		memset(_queryResult->stConvHistory[i].compereAccount,0,STRING_LENGTH);
-		memcpy_s(_queryResult->stConvHistory[i].compereAccount,STRING_LENGTH,cvs.originator.c_str(),(cvs.originator.size()<(STRING_LENGTH)) ? (cvs.originator.size()) : (STRING_LENGTH-1));
+//		std::string unicodeoriginator = eSDKTool::utf8str2unicodestr(cvs.originator);
+		std::string unicodeoriginator = cvs.originator;
+		memcpy_s(_queryResult->stConvHistory[i].compereAccount,STRING_LENGTH,unicodeoriginator.c_str(),(unicodeoriginator.size()<(STRING_LENGTH)) ? (unicodeoriginator.size()) : (STRING_LENGTH-1));
 		memset(_queryResult->stConvHistory[i].compereName,0,STRING_LENGTH);
-		memcpy_s(_queryResult->stConvHistory[i].compereName,STRING_LENGTH,cvs.originator.c_str(),(cvs.originator.size()<(STRING_LENGTH)) ? (cvs.originator.size()) : (STRING_LENGTH-1));
+		memcpy_s(_queryResult->stConvHistory[i].compereName,STRING_LENGTH,unicodeoriginator.c_str(),(unicodeoriginator.size()<(STRING_LENGTH)) ? (unicodeoriginator.size()) : (STRING_LENGTH-1));
 
 	}
 
@@ -818,6 +826,7 @@ int UCHistoryMgr::QueryHisConvPartByID(const std::string& _convID,
 	for(unsigned int i = 0;i<iSize;++i)
 	{
 		memset(_queryResult->stConfPart[i].partAccount,0,STRING_LENGTH);
+//		std::string unicodestrList = eSDKTool::utf8str2unicodestr(strList.at(i));
 		memcpy_s(_queryResult->stConfPart[i].partAccount,STRING_LENGTH,strList.at(i).c_str(),(strList.at(i).size()<(STRING_LENGTH)) ? (strList.at(i).size()) : (STRING_LENGTH-1));
 		memset(_queryResult->stConfPart[i].partName,0,STRING_LENGTH);
 		memcpy_s(_queryResult->stConfPart[i].partName,STRING_LENGTH,strList.at(i).c_str(),(strList.at(i).size()<(STRING_LENGTH)) ? (strList.at(i).size()) : (STRING_LENGTH-1));

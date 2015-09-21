@@ -83,7 +83,7 @@ bool UCStatusChangeEvent::DoHandle(void)
 		return false;
 	}
 
-	STContact _contact;
+	STContact _contact = {0};
 	strcpy_s(_contact.ucAcc_,STRING_LENGTH,info.account);
 	//strcpy_s(_contact.address_,STRING_LENGTH,info.address);
 	//strcpy_s(_contact.ipphone1_,STRING_LENGTH,info.bindNO);

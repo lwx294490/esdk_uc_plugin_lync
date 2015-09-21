@@ -75,10 +75,10 @@
         </Grid>
         <Label Content="{DynamicResource EnterName}" Grid.Row="3" Height="28" HorizontalAlignment="Left" Margin="20,0,0,109" Name="label1" VerticalAlignment="Center" FlowDirection="RightToLeft" Width="80" Visibility="Hidden" />
         <TextBox Grid.Row="3" Height="23" HorizontalAlignment="Left" Margin="106,0,0,114" Name="txtName" VerticalAlignment="Center" Width="120" Visibility="Hidden" />
-        <Label Content="{DynamicResource EnterNumber}" Grid.Row="2" Height="28" HorizontalAlignment="Left" Margin="4,13,0,9" Name="label2" VerticalAlignment="Center"  FlowDirection="RightToLeft" Width="66" />
-        <TextBox Grid.Row="2" Height="23" HorizontalAlignment="Left" Margin="83,13,0,9" Name="txtNumber" VerticalAlignment="Center" Width="109" KeyDown="txtNumber_KeyDown" TextChanged="txtNumber_TextChanged" VerticalContentAlignment="Center" />
-        <Button Content="{DynamicResource Add}" Grid.Row="2" Height="23" HorizontalAlignment="Left" Margin="202,13,0,0" Name="btnAdd" VerticalAlignment="Top" Width="75" Click="btnAdd_Click" />
-        <Button Content="{DynamicResource Delete}" Grid.Row="2" Height="23" HorizontalAlignment="Left" Margin="286,13,0,0" Name="btnDelete" VerticalAlignment="Top" Width="75" Click="btnDelete_Click" />
+        <Label Content="{DynamicResource EnterNumber}" Grid.Row="2" Height="28" HorizontalAlignment="Left" Margin="4,13,0,9" Name="label2" VerticalAlignment="Center"  FlowDirection="RightToLeft" Width="66" ToolTip="{DynamicResource EnterNumber}"/>
+        <TextBox Grid.Row="2" Height="23" HorizontalAlignment="Left" Margin="82,13,0,9" Name="txtNumber" VerticalAlignment="Center" Width="109" KeyDown="txtNumber_KeyDown" TextChanged="txtNumber_TextChanged" VerticalContentAlignment="Center" />
+        <Button Content="{DynamicResource Add}" Grid.Row="2" Height="23" HorizontalAlignment="Left" Margin="198,13,0,0" Name="btnAdd" VerticalAlignment="Top" Width="75" Click="btnAdd_Click" />
+        <Button Content="{DynamicResource Delete}" Grid.Row="2" Height="23" HorizontalAlignment="Left" Margin="281,13,0,0" Name="btnDelete" VerticalAlignment="Top" Width="75" Click="btnDelete_Click" />
 
         <DataGrid AutoGenerateColumns="False" Height="137"   
                      
@@ -142,33 +142,33 @@
         <Button Content="{DynamicResource OK}" Grid.Row="4" Height="23" HorizontalAlignment="Left" Margin="447,10,0,0" Name="btnOK" VerticalAlignment="Top" Width="75" Click="btnOK_Click"></Button>
         <Button Content="{DynamicResource Cancel}" Grid.Row="4" Height="23" HorizontalAlignment="Left" Margin="528,10,0,0" Name="btnCancle" VerticalAlignment="Top" Width="75" Click="btnCancle_Click"></Button>
         <Button Content="{DynamicResource Query}" Height="23" HorizontalAlignment="Left" Margin="534,11,0,0" Name="btnQuery" VerticalAlignment="Top" Width="68" Click="btnQuery_Click"></Button>
-        <TextBox Height="23" HorizontalAlignment="Left" Margin="436,13,0,0" Name="txtPage" ToolTip="{DynamicResource LastPage}" VerticalAlignment="Top" Width="22" Grid.Row="2" />
-        <Label Content="/" Height="28" HorizontalAlignment="Right" Margin="0,10,120,0" Name="labTotal" VerticalAlignment="Top" Width="46" Grid.Row="2" />
-        <Button Height="23" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="374,13,0,9" ToolTip="{DynamicResource FristPage}" VerticalContentAlignment="Center" Width="22" Grid.Row="2"  Click="imgFrist_MouseLeftButtonUp">
+        <TextBox Height="23" Margin="427,13,168,0" Name="txtPage"  VerticalAlignment="Top" Grid.Row="2" KeyDown="txtPage_KeyDown"  TextChanged="txtPage_TextChanged" />
+        <Label Content="/" Height="28" HorizontalAlignment="Right" Margin="0,10,133,0" Name="labTotal" VerticalAlignment="Top" Width="36" Grid.Row="2" />
+        <Button Height="23" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="368,13,0,9" ToolTip="{DynamicResource FristPage}" VerticalContentAlignment="Center" Width="22" Grid.Row="2"  Click="imgFrist_MouseLeftButtonUp">
             <Button.Content>
                 <Image Source="/Image/history/page-first-select.gif" Width="16" Height="16" Grid.Row="1" Name="imgFrist"  ></Image>
             </Button.Content>
         </Button>
         <!--<Image Height="16" Name="image1" Source="/Image/history/page-first-select.gif" Width="16" Margin="377,16,0,13" Grid.Row="2" HorizontalAlignment="Left" />-->
-        <Button Height="23" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="406,13,0,9" ToolTip="{DynamicResource PreviousPage}" VerticalContentAlignment="Center" Width="22" Grid.Row="2" Click="imgPrev_MouseLeftButtonUp">
+        <Button Height="23" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="399,13,0,9" ToolTip="{DynamicResource PreviousPage}" VerticalContentAlignment="Center" Width="22" Grid.Row="2" Click="imgPrev_MouseLeftButtonUp">
             <Button.Content>
                 <Image Source="/Image/history/page-prev.gif" Width="16" Height="16" Grid.Row="1"  Name ="imgPrev" ></Image>
             </Button.Content>
         </Button>
         <!--<Image Height="16" Name="image2" Source="/Image/history/page-prev.gif" Width="16" Margin="403,16,206,13" Grid.Row="2" />-->
-        <Button Height="23" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="500,13,0,9" ToolTip="{DynamicResource GO}" VerticalContentAlignment="Center" Width="22" Grid.Row="2"   Click="imgGo_MouseLeftButtonUp">
+        <Button Height="23" HorizontalAlignment="Right" HorizontalContentAlignment="Center" Margin="0,13,106,9" ToolTip="{DynamicResource GO}" VerticalContentAlignment="Center" Width="22" Grid.Row="2"   Click="imgGo_MouseLeftButtonUp">
             <Button.Content>
                 <Image Source="/Image/history/refresh.gif" Width="16" Height="16" Grid.Row="1" Name ="imgGo" IsHitTestVisible="True"></Image>
             </Button.Content>
         </Button>
         <!--<Image Height="16" IsHitTestVisible="True" Name="image3" Source="/Image/history/refresh.gif" Width="16" Margin="497,16,112,13" Grid.Row="2" />-->
-        <Button Height="23" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="536,13,0,9" ToolTip="{DynamicResource NextPage}" VerticalContentAlignment="Center" Width="22" Grid.Row="2" Click="imgNext_MouseLeftButtonUp">
+        <Button Height="23" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="544,13,0,9" ToolTip="{DynamicResource NextPage}" VerticalContentAlignment="Center" Width="22" Grid.Row="2" Click="imgNext_MouseLeftButtonUp">
             <Button.Content>
                 <Image Source="/Image/history/page-next.gif" Width="16" Height="16" Grid.Row="1"  Name ="imgNext" ></Image>
             </Button.Content>
         </Button>
         <!--<Image Height="16" Name="imgNext" Source="/Image/history/page-next.gif" Width="16" Margin="533,16,76,13" Grid.Row="2" />-->
-        <Button Height="23" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="573,13,0,9" Name="BtnLast" VerticalContentAlignment="Center" Width="22" Grid.Row="2"  Click="imgLast_MouseLeftButtonUp">
+        <Button Height="23" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="577,13,0,9" Name="BtnLast" VerticalContentAlignment="Center" Width="22" Grid.Row="2" ToolTip="{DynamicResource LastPage}" Click="imgLast_MouseLeftButtonUp">
             <Button.Content>
                 <Image Source="/Image/history/page-last-select.gif" Width="16" Height="16" Grid.Row="1" Name ="imgLast" ></Image>
             </Button.Content>

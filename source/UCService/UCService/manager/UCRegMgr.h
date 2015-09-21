@@ -35,6 +35,7 @@ public:
 	std::string GetSelfAccount(){return m_strLoginAccount;}
 	std::string GetSipAccount(){return m_strSipAccount;}
 	std::string GetBindNO(){return m_strBindNO;}
+	std::string GelLocalIP(){return m_strLocalIP;}
 	void SetLoginFlag(bool isFlag) {m_bLoginFlag = isFlag;}
 	bool GetLoginFlag() { return m_bLoginFlag; }
 private:
@@ -46,6 +47,7 @@ private:
 	std::string m_strBindNO;		//类似“11316”格式，纯数字
 	bool m_bLoginFlag;
 	int m_iSelfStatus;				//自身状态
+	std::string m_strLocalIP;       //登录IP地址////
 public:
 	bool m_bLogOutFlag;
 };

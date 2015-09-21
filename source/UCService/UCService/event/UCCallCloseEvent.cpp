@@ -39,6 +39,8 @@ bool UCCallCloseEvent::DoHandle(void)
 	//Ω· ¯≤•∑≈¡Â“Ù
 	(void)UCPlayMgr::Instance().EndPlayIncoming();
 	(void)UCPlayMgr::Instance().EndPlayRingBack();
+	(void)UCPlayMgr::Instance().EndPlayHoldCall();
+
 
 	if(UCCallMgr::Instance().GetCallID() == m_param1)
 	{

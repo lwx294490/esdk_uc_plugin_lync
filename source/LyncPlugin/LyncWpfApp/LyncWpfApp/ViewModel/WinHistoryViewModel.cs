@@ -14,7 +14,7 @@ namespace LyncWpfApp
         HistoryQueryBusiness query = new HistoryQueryBusiness();
         public ICommand RefreshCommand { get; set; }
         public ICommand ClearCommand { get; set; }
-        int count = 200;
+        int count = 100;    //modify by 00327190  2015/7/13  本来是200条一页
         public WinHistoryViewModel(WinHisitory window)
         {
             winHisitory = window;
@@ -95,6 +95,16 @@ namespace LyncWpfApp
                     STCallHistroyItem item = (STCallHistroyItem)Marshal.PtrToStructure(tempInfoIntPtr, typeof(STCallHistroyItem));
 
                     CallItem callItem = new CallItem();
+                    //2015/8/24    UTF8 转码UNICODE
+                    //byte[] buffer1 = Encoding.Default.GetBytes(item.CallName);
+                    //byte[] buffer2 = Encoding.Convert(Encoding.UTF8, Encoding.Default, buffer1, 0, buffer1.Length);
+                    //string item1= Encoding.Default.GetString(buffer2, 0, buffer2.Length);
+                    //callItem.Name = item1;
+                    //byte[] buffer3 = Encoding.Default.GetBytes(item.CallNum);
+                    //byte[] buffer4 = Encoding.Convert(Encoding.UTF8, Encoding.Default, buffer3, 0, buffer3.Length);
+                    //string item2 = Encoding.Default.GetString(buffer4, 0, buffer4.Length);
+                    //callItem.Phone = item2;
+                    //
                     callItem.Phone = item.CallNum;
                     callItem.Name = item.CallName;
                     DateTime dtTime = DateTime.Parse(item.startTime.year.ToString() + "-" + item.startTime.month + "-" + item.startTime.day
@@ -161,6 +171,11 @@ namespace LyncWpfApp
                     STConvHistroyItem item = (STConvHistroyItem)Marshal.PtrToStructure(tempInfoIntPtr, typeof(STConvHistroyItem));
 
                     ConferenceItem it = new ConferenceItem();
+                    //2015/8/24    UTF8 转码UNICODE
+                    //byte[] buffer1 = Encoding.Default.GetBytes(item.compereName);
+                    //byte[] buffer2 = Encoding.Convert(Encoding.UTF8, Encoding.Default, buffer1, 0, buffer1.Length);
+                    //string item1 = Encoding.Default.GetString(buffer2, 0, buffer2.Length);
+                    //it.Initiator = item1;
                     it.Initiator = item.compereName;
 
                     DateTime dt = DateTime.Parse(item.startTime.year.ToString() + "-" + item.startTime.month + "-" + item.startTime.day
@@ -224,8 +239,13 @@ namespace LyncWpfApp
                {
                    Marshal.Copy(pCallHistory, iSizeSTConfPartData + iSizeSTConfPartItem * i, tempInfoIntPtr, (int)iSizeSTConfPartItem);
                    STConfPartItem item = (STConfPartItem)Marshal.PtrToStructure(tempInfoIntPtr, typeof(STConfPartItem));
-
+                   //2015/8/24    UTF8 转码UNICODE
+                   //byte[] buffer1 = Encoding.Default.GetBytes(item.partName);
+                   //byte[] buffer2 = Encoding.Convert(Encoding.UTF8, Encoding.Default, buffer1, 0, buffer1.Length);
+                   //string item1 = Encoding.Default.GetString(buffer2, 0, buffer2.Length);
+                   //2015/8/24    UTF8 转码UNICODE
                    it = new ParticipantItem();
+                   //it.Initiator = item1;
                    it.Initiator = item.partName;
                    it.IsMain = false;
                    list.Add(it);

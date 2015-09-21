@@ -74,21 +74,21 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Reference\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Lync.Controls, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Lync.Controls, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Program Files\Microsoft Lync\SDK\Assemblies\Desktop\Microsoft.Lync.Controls.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\DJT\Microsoft.Lync.Controls.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Lync.Controls.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Lync.Controls.Framework, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Program Files\Microsoft Lync\SDK\Assemblies\Desktop\Microsoft.Lync.Controls.Framework.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\DJT\Microsoft.Lync.Controls.Framework.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Lync.Model, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\..\Program Files\Microsoft Lync\SDK\Assemblies\Desktop\Microsoft.Lync.Model.dll</HintPath>
+    <Reference Include="Microsoft.Lync.Model, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\DJT\Microsoft.Lync.Model.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Lync.Utilities, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Lync.Utilities, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Program Files\Microsoft Lync\SDK\Assemblies\Desktop\Microsoft.Lync.Utilities.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\DJT\Microsoft.Lync.Utilities.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
@@ -614,6 +614,18 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Image\DialPad_3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Image\MobilePhone_2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Image\MobilePhone_1.png" />
+    <Resource Include="Image\MobilePhone_3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Image\sms_1.png" />
+    <Resource Include="Image\sms_2.png" />
+    <Resource Include="Image\sms_3.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

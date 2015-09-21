@@ -25,7 +25,7 @@ using Microsoft.Lync.Model.Group;
 using System.Linq;
 using System.Management;
 using System.Globalization;
-using System.Runtime.InteropServices;
+//using System.Runtime.InteropServices;
 
 
 
@@ -79,7 +79,11 @@ namespace LyncWpfApp
         RECTSize WpfPreviousRECT = new RECTSize();//保存wpf尺寸变化之前的尺寸
         public ContactAvailability userState;//保存lync状态信息
         public FrmToolBar toolBar = null;//工具盘
-        public WinCall winCall;//呼叫窗体       
+        public WinCall winCall;//呼叫窗体    
+        //WinCallViewModel winCallViewModel;  //窗体   modify by jinyeqing   2015/8/5        
+        public bool Ishold = false;  //modify by 00327190   2015/8/5  是否视频条件下呼叫保持  
+        public bool IsTransfer= false;  //modify by 00327190   2015/8/5  是否转移进入的AllContact界面
+        public bool IsBlindTrans = false;  //modify by 00327190   2015/8/5  是否转移进入的AllContact界面
         public WinCallReceive winCallReceive;//呼叫接听窗体   modify by jinyeqing   2015/6/5
         public System.Timers.Timer timer;//通话计时器 
         //modify by jinyeqing
@@ -87,12 +91,14 @@ namespace LyncWpfApp
         public bool isConnected = false;
         public bool isUcCount= true;
         int i = 0;   //6/23
+        public bool isHave;         //是否显示wincallreceive该界面   2015/8/3
+        public IntPtr hwnd;         //wincallreceive该界面的句柄   2015/8/13
         //modify by jinyeqing  2015/6/8
         public static GroupCollection LyncContactGroups;//lync联系人组集合
         static public LyncClient _Client = null;//lync客户端对象
         static ReaderWriterLockSlim lockObjLyncState = new ReaderWriterLockSlim();//获取lync客户端状态线程锁
         static ReaderWriterLockSlim lockObjLyncMove = new ReaderWriterLockSlim();//获取lync移动状态线程锁
-        static ReaderWriterLockSlim lockLyncUCLoginOut = new ReaderWriterLockSlim();//获取lync移动状态线程锁
+        static ReaderWriterLockSlim lockLyncUCLoginOut = new ReaderWriterLockSlim();//获取lync登陆登出线程锁
         ContactManager LyncContactManager;//lync联系人管理对象
         Process process = null;//lync进程
         IntPtr iLyncAppWinHandle;//lync窗体句柄
@@ -108,7 +114,7 @@ namespace LyncWpfApp
         static CallBack callBackEnumChildWindows = new CallBack(ChildWindowProcess);//枚举子窗体回调函数
         static List<IntPtr> lyncChildHwndList = new List<IntPtr>();//lync子窗体列表
         static CallBack callBackFindSelectItem = new CallBack(FindSelectItemProcess);//查询lync窗体控件回调函数
-        WinCallReceive receive;//来电接受窗体      
+        public WinCallReceive receive;//来电接受窗体      
         HwndSourceHook hook;//捕捉画面消息钩子
         HwndSource hs;//包含 WPF 内容的 Win32 窗口
         DateTime dtStart;//开始时间
@@ -117,7 +123,7 @@ namespace LyncWpfApp
         public double scaleUIX = 0;//系统dpi值
         public WinDail winDial = null;//拨号盘画面
         public WinTwoDail winTwoDail;//二次拨号画面
-        public WinAllContact winAllContact;//联系人画面
+        public WinAllContact winAllContact;//联系人画面      
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
         static extern int GetWindowThreadProcessId(IntPtr hwnd, int ID);
         [DllImport("user32.dll", SetLastError = true)]
@@ -370,7 +376,7 @@ namespace LyncWpfApp
         {
             //modify by jinyeqing 2015/6/2
           LogManager.SystemLog.Error(string.Format("Enter ExitApp"));
-          bool isreturn = false;
+          //bool isreturn = false;
           try
             {
                 Dispatcher.Invoke(new Action(()
@@ -402,12 +408,7 @@ namespace LyncWpfApp
                         LogManager.SystemLog.Info("exit  StartSignOutUC"); 
 
                     }
-                    //modify by jinyeqing 2015/6/2
-                    //if (isreturn == false)
-                    //{
-                    //    LogManager.SystemLog.Info("isreturn is false ");
-                    //    StartSignOutUC();//注销UC   这个isreturn打出来是为了确保上面的注销UC没执行的话，这边执行一下  
-                    //}
+                   
                     //modify by jinyeqing 2015/6/2
                     StartUnInit();//释放UC                                       
                     RegistryKey pregkey;
@@ -461,7 +462,17 @@ namespace LyncWpfApp
                         windowRect[index - 1] = (byte)heigth;
                         pregkey.SetValue("WindowRect", windowRect, RegistryValueKind.Binary);
                     }
-                    DeleteRegistry();                 
+                    DeleteRegistry();
+                    //如果Lync插件自启动，那么就算Lync设置了自启动也不能让它运行   modify by 00327190   2015/7/10
+                    RegistryKey runKey = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
+                    if (null != runKey && null != runKey.GetValue("LyncWpfApp.exe"))
+                    {
+                        RegistryKey runKey1 = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
+                        if (null != runKey1 && null != runKey1.GetValue("Lync"))
+                        {
+                            runKey1.DeleteValue("Lync");
+                        }
+                    }
                     System.Windows.Forms.Application.ExitThread();  //modify by jinyeqing 2015/6/2 多打点日志 看卡在哪里 
                     Thread.Sleep(iThreadSleepTime);
                     ////modify by jinyeqing 2015/4/27  问题单（退出时后台LyncWpfApp进程还是在运行）  解决思路：可能插件退出之前程序已经卡死，都没跑进该方法，打日志标注一下
@@ -507,7 +518,7 @@ namespace LyncWpfApp
                 LogInBusiness.AVSessionConnected = UCAVSessionConnected;
 
                 hook = new HwndSourceHook(WndProc);//MainWindow中注册Hook
-                hs = PresentationSource.FromVisual(this) as HwndSource;
+                hs = PresentationSource.FromVisual(this) as HwndSource;              
                 if (null == hs)
                 {
                     LogManager.SystemLog.Error("HwndSourceHook = NULL");
@@ -557,10 +568,10 @@ namespace LyncWpfApp
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
                     receive = new WinCallReceive(this, strBuffer, para.isvideo_ == 1);
-                    if (para.callMode == (int)MemberType.UC_IPPHONE)//iphones呼出来电时，不现实来电窗体
-                    {
-                        receive.Left = iReceiveLeftOff;
-                    }
+                    //if (para.callMode == (int)MemberType.UC_IPPHONE)//iphones呼出来电时，不现实来电窗体  9/17
+                    //{
+                    //    receive.Left = iReceiveLeftOff;
+                    //}
                     if (para.isConference == 1)      //来电是会议的时候，expander控件不可见,answer改为ConAnswer
                     {
                         receive.expander.Visibility = Visibility.Hidden;
@@ -632,117 +643,312 @@ namespace LyncWpfApp
             dtStart = DateTime.Now;
             timer.Enabled = true;//是否执行System.Timers.Timer.Elapsed事件；
             isConnected = true;  //modify by jinyeqing  2015/6/8  以下是因为语音未接通时不让主叫视频按钮显示            
-            setBtn();
+            setBtn();            //设置按钮状态
           
         }
 
 
-
-        /// <summary>
-        /// 设置图标状态
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void setBtn()
+        public void setBtn()
         {
-            string str = winCall.strtemp;
-            if (winCall.isAddContract == false)   //不执行wincall 里面
+            if (winCall != null)
             {
-                Dispatcher.Invoke(new Action(()
-                =>
+                string str = winCall.strtemp;               
+                if (winCall.isAddContract == false)   //不执行wincall 里面
                 {
-                    if (toolBar.JointType == PhoneJointType.IPPhone_Device)
+                    Dispatcher.Invoke(new Action(()
+                    =>
                     {
-                        winCall.btnVideo.IsEnabled = false;     //话机联动状态下，不能呼叫视频
-                        winCall.btnAddContact.IsEnabled = false;
-                        winCall.btnBlindTransCall.IsEnabled = false;
-                        winCall.btnDial.IsEnabled = true;
-                        winCall.btnSetMicPhone.IsEnabled = true;
-                        winCall.btnSetVol.IsEnabled = true;
-                        winCall.btnCallSuspend.IsEnabled = true;
-                        if (i == 0)
+                        //话机联动状态下，不能呼叫视频,界面只提供代接代挂功能  
+                        //If you are in IPPhone type,you can only pick up or Hang up on PC interface 
+                        if (toolBar.JointType == PhoneJointType.IPPhone_Device)
                         {
-                            winCall.SetVideoImage();            //设置视频按钮图片        6/23    
-                            i++;
-                        }
-                    }
-                    else
-                    {
-                        winCall.btnVideo.IsEnabled = true;
-
-                        if (SingletonObj.LoginInfo.LyncName != str.Split(';')[0] && str.Split(';').Length != 1) //被叫权限设置（不能使用添加按钮）
-                        {
+                            winCall.btnVideo.IsEnabled = false;
                             winCall.btnAddContact.IsEnabled = false;
-                            winCall.btnBlindTransCall.IsEnabled = true;
+                            winCall.btnBlindTransCall.IsEnabled = false;
+                            winCall.btnDial.IsEnabled = true;
+                            winCall.btnSetMicPhone.IsEnabled = false;
+                            winCall.btnSetVol.IsEnabled = false;
+                            winCall.btnCallSuspend.IsEnabled = false;
                             if (i == 0)
                             {
-                                winCall.SetVideoImage();            //设置视频按钮图片        6/23    
+                                //设置视频按钮图片   
+                                //set the image of the video button 
+                                winCall.SetVideoImage();
                                 i++;
                             }
                         }
                         else
                         {
-                            if (str.Split(';').Length > 2)   //会议中主叫可以加人但是不能呼叫转移
+                            if (str.Split(';')[0] == "Call")    //一开始为Call
                             {
-                                winCall.btnAddContact.IsEnabled = true;
-                                winCall.btnBlindTransCall.IsEnabled = false;
+                                if (SingletonObj.LoginInfo.LyncName != str.Split(';')[1] && str.Split(';').Length != 1) //被叫权限设置（不能使用添加按钮）
+                                {
+                                    if (str.Split(';').Length > 2)   //多人会议时被叫权限
+                                    {
+                                        winCall.btnAddContact.IsEnabled = false;
+                                        winCall.btnBlindTransCall.IsEnabled = true;
+                                        winCall.btnVideo.IsEnabled = false;
+                                        winCall.btnCallSuspend.IsEnabled = false;
+                                    }
+                                    else              //两人会话时被叫权限
+                                    {
+                                        winCall.btnAddContact.IsEnabled = false;
+                                        winCall.btnBlindTransCall.IsEnabled = true;
+                                        winCall.btnVideo.IsEnabled = true;
+                                        winCall.btnCallSuspend.IsEnabled = true;
+                                    }
+                                }
+                                else
+                                {
+                                    if (str.Split(';').Length > 2)   //会议中主叫可以加人但是不能呼叫转移
+                                    {
+                                        winCall.btnAddContact.IsEnabled = true;
+                                        winCall.btnBlindTransCall.IsEnabled = false;
+                                        winCall.btnCallSuspend.IsEnabled = false;
+                                        winCall.btnVideo.IsEnabled = false;
+                                    }
+                                    else                            //两人会话中主叫可以加人可以呼叫转移
+                                    {
+                                        winCall.btnBlindTransCall.IsEnabled = true;
+                                        winCall.btnAddContact.IsEnabled = true;
+                                        winCall.btnCallSuspend.IsEnabled = true;
+                                        winCall.btnVideo.IsEnabled = true;
+                                    }
+                                }
+                                winCall.btnDial.IsEnabled = true;
+                                winCall.btnSetMicPhone.IsEnabled = true;
+                                winCall.btnSetVol.IsEnabled = true;
                             }
-                            else                            //两人会话中主叫可以加人可以呼叫转移
+
+                            else if (str.Split(';')[0] == "VideoCall")    //视频通话
                             {
+                                winCall.btnAddContact.IsEnabled = false;
                                 winCall.btnBlindTransCall.IsEnabled = true;
-                                winCall.btnAddContact.IsEnabled = true;
+                                winCall.btnVideo.IsEnabled = true;
+                                winCall.btnDial.IsEnabled = true;
+                                winCall.btnSetMicPhone.IsEnabled = true;
+                                winCall.btnSetVol.IsEnabled = true;
+                                winCall.btnCallSuspend.IsEnabled = true;
+                                if (i == 0)
+                                {
+                                    winCall.SetVideoImage();            //设置视频按钮图片        6/23    
+                                    i++;
+                                }
+                            }
+                            else    //以用户名打头的情况
+                            {
+                                if (SingletonObj.LoginInfo.LyncName != str.Split(';')[0] && str.Split(';').Length != 1) //被叫权限设置（不能使用添加按钮）
+                                {
+                                    if (str.Split(';').Length > 2)   //多人会议时被叫权限
+                                    {
+                                        winCall.btnAddContact.IsEnabled = false;
+                                        winCall.btnBlindTransCall.IsEnabled = true;
+                                        winCall.btnVideo.IsEnabled = false;
+                                        winCall.btnCallSuspend.IsEnabled = false;
+                                    }
+                                    else              //两人会话时被叫权限
+                                    {
+                                        winCall.btnAddContact.IsEnabled = false;
+                                        winCall.btnBlindTransCall.IsEnabled = true;
+                                        winCall.btnVideo.IsEnabled = true;
+                                        winCall.btnCallSuspend.IsEnabled = true;
+                                    }
+                                }
+                                else
+                                {
+                                    if (str.Split(';').Length > 2)   //会议中主叫可以加人但是不能呼叫转移
+                                    {
+                                        winCall.btnAddContact.IsEnabled = true;
+                                        winCall.btnBlindTransCall.IsEnabled = false;
+                                        winCall.btnCallSuspend.IsEnabled = false;
+                                        winCall.btnVideo.IsEnabled = false;
+                                    }
+                                    else                            //两人会话中主叫可以加人可以呼叫转移
+                                    {
+                                        winCall.btnBlindTransCall.IsEnabled = true;
+                                        winCall.btnAddContact.IsEnabled = true;
+                                        winCall.btnCallSuspend.IsEnabled = true;
+                                        winCall.btnVideo.IsEnabled = true;
+                                    }
+                                }
+                                winCall.btnDial.IsEnabled = true;
+                                winCall.btnSetMicPhone.IsEnabled = true;
+                                winCall.btnSetVol.IsEnabled = true;
                             }
                         }
-                        winCall.btnCallSuspend.IsEnabled = true;
-                        winCall.btnDial.IsEnabled = true;
-                        winCall.btnSetMicPhone.IsEnabled = true;
-                        winCall.btnSetVol.IsEnabled = true;
-                    }
-                }));
-            }
-            else
-            {
+                    }));
+                }
 
-                Dispatcher.Invoke(new Action(()
-               =>
-               {
-                   if (toolBar.JointType == PhoneJointType.IPPhone_Device)
-                   {
-                       winCall.btnVideo.IsEnabled = false;     //话机联动状态下，不能呼叫视频
-                       winCall.btnAddContact.IsEnabled = false;
-                       winCall.btnBlindTransCall.IsEnabled = false;
-                       winCall.btnSetMicPhone.IsEnabled = true;
-                       winCall.btnSetVol.IsEnabled = true;
-                       winCall.btnCallSuspend.IsEnabled = true;
-                       winCall.btnDial.IsEnabled = true;
-                   }
-                   else
-                   {
-                       winCall.btnCallSuspend.IsEnabled = true;
-                       winCall.btnDial.IsEnabled = true;
-                       if (SingletonObj.LoginInfo.LyncName != str.Split(';')[0] && str.Split(';').Length != 1) //被叫权限设置（不能使用添加按钮）
-                       {
-                           winCall.btnAddContact.IsEnabled = false;
-                           winCall.btnBlindTransCall.IsEnabled = true;
-                       }
-                       else
-                       {
-                           if ((str.Split(';').Length > 2))  //会议中主叫可以加人但是不能呼叫转移
-                           {
-                               winCall.btnAddContact.IsEnabled = true;
-                               winCall.btnBlindTransCall.IsEnabled = false;
-                           }
-                           else                            //两人会话中主叫可以加人可以呼叫转移
-                           {
-                               winCall.btnBlindTransCall.IsEnabled = true;
-                               winCall.btnAddContact.IsEnabled = true;
-                           }
-                       }
-                       winCall.btnSetMicPhone.IsEnabled = true;
-                       winCall.btnSetVol.IsEnabled = true;
-                   }
+                else
+                {
 
-               }));
+                    Dispatcher.Invoke(new Action(()
+                   =>
+                    {
+                        if (winCall != null)
+                        {
+                            //话机联动状态下，不能呼叫视频,界面只提供代接代挂功能  
+                            //If you are in IPPhone type,you can only pick up or Hang up on PC interface 
+                            if (toolBar.JointType == PhoneJointType.IPPhone_Device)
+                            {
+                                winCall.btnVideo.IsEnabled = false;
+                                winCall.btnAddContact.IsEnabled = false;
+                                winCall.btnBlindTransCall.IsEnabled = false;
+                                winCall.btnDial.IsEnabled = true;
+                                winCall.btnSetMicPhone.IsEnabled = false;
+                                winCall.btnSetVol.IsEnabled = false;
+                                winCall.btnCallSuspend.IsEnabled = false;
+                                if (i == 0)
+                                {
+                                    //设置视频按钮图片   
+                                    //set the image of the video button 
+                                    winCall.SetVideoImage();
+                                    i++;
+                                }
+                            }
+                            else
+                            {
+                                if (str.Split(';')[0] == "Call")    //语音会议
+                                {
+                                    if (SingletonObj.LoginInfo.LyncName != str.Split(';')[1] && str.Split(';').Length != 1) //被叫权限设置（不能使用添加按钮）
+                                    {
+                                        if (str.Split(';').Length > 2)   //多人会议时被叫权限
+                                        {
+                                            winCall.btnAddContact.IsEnabled = false;
+                                            winCall.btnBlindTransCall.IsEnabled = true;
+                                            winCall.btnVideo.IsEnabled = false;
+                                            winCall.btnCallSuspend.IsEnabled = false;
+                                        }
+                                        else              //两人会话时被叫权限
+                                        {
+                                            winCall.btnAddContact.IsEnabled = false;
+                                            winCall.btnBlindTransCall.IsEnabled = false;
+                                            winCall.btnVideo.IsEnabled = false;
+                                            winCall.btnCallSuspend.IsEnabled = false;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (str.Split(';').Length > 2)   //会议中主叫可以加人但是不能呼叫转移
+                                        {
+                                            winCall.btnAddContact.IsEnabled = true;
+                                            winCall.btnBlindTransCall.IsEnabled = false;
+                                            winCall.btnCallSuspend.IsEnabled = false;
+                                            winCall.btnVideo.IsEnabled = false;
+                                        }
+                                        else                            //两人会话中主叫可以加人可以呼叫转移
+                                        {
+                                            winCall.btnBlindTransCall.IsEnabled = false;
+                                            winCall.btnAddContact.IsEnabled = true;
+                                            winCall.btnCallSuspend.IsEnabled = false;
+                                            winCall.btnVideo.IsEnabled = false;
+                                        }
+                                    }
+                                    winCall.btnDial.IsEnabled = true;
+                                    winCall.btnSetMicPhone.IsEnabled = true;
+                                    winCall.btnSetVol.IsEnabled = true;
+                                }
+
+                                else if (str.Split(';')[0] == "VideoCall")   //视频通话
+                                {
+                                    winCall.btnAddContact.IsEnabled = false;
+                                    winCall.btnBlindTransCall.IsEnabled = true;
+                                    winCall.btnVideo.IsEnabled = true;
+                                    winCall.btnDial.IsEnabled = true;
+                                    winCall.btnSetMicPhone.IsEnabled = true;
+                                    winCall.btnSetVol.IsEnabled = true;
+                                    winCall.btnCallSuspend.IsEnabled = true;
+                                    if (i == 0)
+                                    {
+                                        winCall.SetVideoImage();            //设置视频按钮图片        6/23    
+                                        i++;
+                                    }
+                                }
+                                else
+                                {
+                                    if (SingletonObj.LoginInfo.LyncName != str.Split(';')[0] && str.Split(';').Length != 1) //被叫权限设置（不能使用添加按钮）
+                                    {
+                                        if (str.Split(';').Length > 2)   //多人会议时被叫权限
+                                        {
+                                            winCall.btnAddContact.IsEnabled = false;
+                                            winCall.btnBlindTransCall.IsEnabled = true;
+                                            winCall.btnVideo.IsEnabled = false;
+                                            winCall.btnCallSuspend.IsEnabled = false;
+                                        }
+                                        else              //两人会话时被叫权限
+                                        {
+                                            winCall.btnAddContact.IsEnabled = false;
+                                            winCall.btnBlindTransCall.IsEnabled = false;
+                                            winCall.btnVideo.IsEnabled = false;
+                                            winCall.btnCallSuspend.IsEnabled = false;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (str.Split(';').Length > 2)   //会议中主叫可以加人但是不能呼叫转移
+                                        {
+                                            winCall.btnAddContact.IsEnabled = true;
+                                            winCall.btnBlindTransCall.IsEnabled = false;
+                                            winCall.btnCallSuspend.IsEnabled = false;
+                                            winCall.btnVideo.IsEnabled = false;
+                                        }
+                                        else                            //两人会话中主叫可以加人可以呼叫转移
+                                        {
+                                            winCall.btnBlindTransCall.IsEnabled = false;
+                                            winCall.btnAddContact.IsEnabled = true;
+                                            winCall.btnCallSuspend.IsEnabled = false;
+                                            winCall.btnVideo.IsEnabled = false;
+                                        }
+                                    }
+                                    winCall.btnDial.IsEnabled = true;
+                                    winCall.btnSetMicPhone.IsEnabled = true;
+                                    winCall.btnSetVol.IsEnabled = true;
+                                }
+
+                            }
+                        }
+                    }));
+                    
+                    //    if (toolBar.JointType == PhoneJointType.IPPhone_Device)
+                    //    {
+                    //        winCall.btnVideo.IsEnabled = false;     //话机联动状态下，不能呼叫视频
+                    //        winCall.btnAddContact.IsEnabled = false;
+                    //        winCall.btnBlindTransCall.IsEnabled = false;
+                    //        winCall.btnSetMicPhone.IsEnabled = false;
+                    //        winCall.btnSetVol.IsEnabled = false;
+                    //        winCall.btnCallSuspend.IsEnabled = false;     //话机联动状态下，不能呼叫保持
+                    //        winCall.btnDial.IsEnabled = true;
+                    //    }
+                    //    else
+                    //    {
+
+                    //        winCall.btnDial.IsEnabled = true;
+                    //        if (SingletonObj.LoginInfo.LyncName != str.Split(';')[0] && str.Split(';').Length != 1) //被叫权限设置（不能使用添加按钮）
+                    //        {
+                    //            winCall.btnAddContact.IsEnabled = false;
+                    //            winCall.btnBlindTransCall.IsEnabled = true;
+                    //        }
+                    //        else
+                    //        {
+                    //            if ((str.Split(';').Length > 2))  //会议中主叫可以加人但是不能呼叫转移
+                    //            {
+                    //                winCall.btnAddContact.IsEnabled = true;
+                    //                winCall.btnBlindTransCall.IsEnabled = false;
+                    //                winCall.btnCallSuspend.IsEnabled = false;
+                    //            }
+                    //            else                            //两人会话中主叫可以加人可以呼叫转移
+                    //            {
+                    //                winCall.btnBlindTransCall.IsEnabled = true;
+                    //                winCall.btnAddContact.IsEnabled = true;
+                    //                winCall.btnCallSuspend.IsEnabled = true;
+                    //            }
+                    //        }
+                    //        winCall.btnSetMicPhone.IsEnabled = true;
+                    //        winCall.btnSetVol.IsEnabled = true;
+                    //    }
+
+                    //}));
+                }
             }
         }
         /// <summary>
@@ -767,6 +973,7 @@ namespace LyncWpfApp
                 winCall.labTime.Content = hour + ":" + minutes + ":" + seconds;
             }));
         }
+
         /// <summary>
         /// 状态回调函数
         /// </summary>
@@ -784,6 +991,7 @@ namespace LyncWpfApp
             info.User = _contact;
             thread.Start(info);
         }
+
         /// <summary>
         /// 更新联系人状态函数
         /// </summary>
@@ -963,21 +1171,58 @@ namespace LyncWpfApp
                         string type = strList[0];
                         if (type == "VideoCall")//视频呼叫
                         {
-                            if (strList.Length > 3)
+                            if (this.isHave == true)  //有接听界面,则不允许做视频操作
                             {
-                                Dialog.Show(StringHelper.FindLanguageResource("NoMultiplePersonVideo"), StringHelper.FindLanguageResource("error"));
-                                return;
-                            }                          
-                          
-                            if (toolBar.JointType == PhoneJointType.IPPhone_Device)
-                            {
-                                Dialog.Show(StringHelper.FindLanguageResource("NoSupportVideo"), StringHelper.FindLanguageResource("error"));
+                                DialogShow.Show(StringHelper.FindLanguageResource("TwoCallsSameTime"), StringHelper.FindLanguageResource("error"), 2);
                                 return;
                             }
-                            call.insertMember((int)MemberType.UC_ACCOUNT, new StringBuilder(strList[2]));
-                            winCall = new WinCall(this, cds.lpData);
-                            winCall.callType = CallHistoryType.HISTORY_CALL_DIALED;
-                            winCall.Show();
+                            else
+                            {
+                                if (strList.Length > 3)
+                                {
+                                    Dialog.Show(StringHelper.FindLanguageResource("NoMultiplePersonVideo"), StringHelper.FindLanguageResource("error"));
+                                    return;
+                                }
+
+                                if (toolBar.JointType == PhoneJointType.IPPhone_Device)
+                                {
+                                    Dialog.Show(StringHelper.FindLanguageResource("NoSupportVideo"), StringHelper.FindLanguageResource("error"));
+                                    return;
+                                }
+                                //call.insertMember((int)MemberType.UC_ACCOUNT, new StringBuilder(strList[2]));
+                                //winCall = new WinCall(this, cds.lpData);
+                                //winCall.callType = CallHistoryType.HISTORY_CALL_DIALED;
+                                //winCall.Show();
+                                //modify by 00327190  之前是只有上面隐掉的，会有问题，纯话机和UC账户要分开   2015/9/18
+                                if (strList[2].IndexOf("@") != -1)
+                                {
+                                    call.insertMember((int)MemberType.UC_ACCOUNT, new StringBuilder(strList[2]));
+                                    winCall = new WinCall(this, cds.lpData);
+                                    winCall.callType = CallHistoryType.HISTORY_CALL_DIALED;
+                                    winCall.Show();
+                                }
+                                else  //如果是纯数字，则再分能不能查到对应的UC用户  2015/9/21
+                                {
+                                    StringBuilder ucName = new StringBuilder(100);
+                                    call.GetUCAccountByPhoneNo(strList[2], ucName);
+                                    if (ucName.ToString() == "")  //纯话机   2015/9/21
+                                    {
+                                        call.insertMember((int)MemberType.UC_IPPHONE, new StringBuilder(strList[2]));
+                                        winCall = new WinCall(this, cds.lpData);
+                                        winCall.callType = CallHistoryType.HISTORY_CALL_DIALED;
+                                        winCall.Show();
+                                    }
+                                    else
+                                    {
+                                        call.insertMember((int)MemberType.UC_ACCOUNT, new StringBuilder(strList[2]));
+                                        winCall = new WinCall(this, cds.lpData);
+                                        winCall.callType = CallHistoryType.HISTORY_CALL_DIALED;
+                                        winCall.Show();
+                                    }
+                                }
+                               
+                            }
+
                         }
                         else
                         {
@@ -997,7 +1242,7 @@ namespace LyncWpfApp
                                     if (call.insertMember((int)MemberType.UC_ACCOUNT, str) != 0)
                                     //if (call.GetUCAccountByPhoneNo(str.ToString(), ucName) == "" || call.GetUCAccountByPhoneNo(str.ToString(), ucName) == null)  
                                     {
-                                        string message = str + StringHelper.FindLanguageResource("NoSuchUCAccount");
+                                        string message = str + " " + StringHelper.FindLanguageResource("NoSuchUCAccount");
                                         DialogShow.Show(message, StringHelper.FindLanguageResource("error"), 2);
                                         cds.lpData = cds.lpData.Replace(a, "");
                                         this.isUcCount = false;
@@ -1022,10 +1267,10 @@ namespace LyncWpfApp
                                         strTemp = ucName + StringHelper.GetLyncDomainString(SingletonObj.LoginInfo.LyncName);
                                         call.insertMember((int)MemberType.UC_ACCOUNT, ucName);
                                         cds.lpData = cds.lpData.Replace(str.ToString().Trim(), strTemp);
-                                    }                                  
+                                    }
                                 }
                                 if (call.startContextCall() == 0)
-                                {                                    
+                                {
                                     winCall = new WinCall(this, cds.lpData.Substring(cds.lpData.IndexOf(';') + 1));
                                     winCall.callType = CallHistoryType.HISTORY_CALL_DIALED;
                                     winCall.Show();
@@ -1039,21 +1284,53 @@ namespace LyncWpfApp
                             }
                             else   //三人至20人的会议 
                             {
-                                for (int index = 2; index < strList.Length; index++)
+                                if (this.isHave == true)  //有接听界面,则不允许做会议操作
                                 {
-                                    str = new StringBuilder(strList[index].Substring(strList[index].IndexOf(':') + 1).TrimEnd('>'));
-
-                                    string a = ";" + str.ToString().Trim();
-                                    StringBuilder ucName = new StringBuilder(100);
-                                    call.insertMember((int)MemberType.UC_ACCOUNT, str);                                 
-
+                                    DialogShow.Show(StringHelper.FindLanguageResource("TwoCallsSameTime"), StringHelper.FindLanguageResource("error"), 2);
+                                    return;
                                 }
-                                call.startContextCall();
-                                winCall = new WinCall(this, cds.lpData.Substring(cds.lpData.IndexOf(';') + 1));
-                                winCall.callType = CallHistoryType.HISTORY_CALL_DIALED;
-                                winCall.Show();
+                                else
+                                {
+                                    for (int index = 2; index < strList.Length; index++)
+                                    {
+                                        str = new StringBuilder(strList[index].Substring(strList[index].IndexOf(':') + 1).TrimEnd('>'));
+
+                                        string a = ";" + str.ToString().Trim();
+                                        StringBuilder ucName = new StringBuilder(100);
+                                       // call.insertMember((int)MemberType.UC_ACCOUNT, str);
+                                        //modify by 00327190  之前是只有上面隐掉的，会有问题，纯话机和UC账户要分开   2015/9/18
+                                        if (str.ToString().IndexOf("@") != -1)
+                                        {
+                                            call.insertMember((int)MemberType.UC_ACCOUNT, str);
+                                        }
+                                        else  //如果是纯数字，则再分能不能查到对应的UC用户  2015/9/21
+                                        {                                           
+                                            call.GetUCAccountByPhoneNo(str.ToString(), ucName);                                           
+                                            if (ucName.ToString() == "")  //纯话机 
+                                            {
+                                                call.insertMember((int)MemberType.UC_IPPHONE, str);
+                                            }
+                                            else
+                                            {
+                                                call.insertMember((int)MemberType.UC_ACCOUNT, ucName);
+                                            }
+
+                                        }
+
+                                    }
+                                    call.startContextCall();
+                                    winCall = new WinCall(this, cds.lpData.Substring(cds.lpData.IndexOf(';') + 1));
+                                    winCall.callType = CallHistoryType.HISTORY_CALL_DIALED;
+                                    winCall.Show();
+                                }
+
                             }
                         }
+                    }
+                    else
+                    {
+                        DialogShow.Show(StringHelper.FindLanguageResource("Youareincallalready"), StringHelper.FindLanguageResource("error"), 2);  //不能同时发起两路通话
+                        return;
                     }
                 }
             }
@@ -1135,6 +1412,7 @@ namespace LyncWpfApp
                             toolBar.SetButtonVisible(true);
                             toolBar.SetBtnImage(devType);
                         }));
+                        SetLabStateToolTip(_reason);//设置状态提示信息     2015/8/13
                     }
                     else
                     {
@@ -1276,10 +1554,24 @@ namespace LyncWpfApp
 
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                // Set up the ToolTip text for the Button
-                toolTipLabState.SetToolTip(toolBar.LabState, str);
+                // Set up the ToolTip text for the Button               
                 LogManager.SystemLog.Debug("SetLabStateToolTip.SingletonObj.LoginInfo = " + SingletonObj.LoginInfo);               
                 toolBar.LabState.Text = SingletonObj.LoginInfo == null ? StringHelper.FindLanguageResource("SignedUCFailed") : SingletonObj.LoginInfo.UserID;
+                LogManager.SystemLog.Info("str:" + str);    
+                if (toolBar.LabState.Text == StringHelper.FindLanguageResource("SignedUCFailed"))
+                {
+                    if (_reason.ToString() == "")
+                    {
+                        LogManager.SystemLog.Info("str:" + str);  
+                        str = StringHelper.FindLanguageResource("NormalError");//登陆一般失败 
+                    }
+                    toolTipLabState.SetToolTip(toolBar.LabState, str);
+                }
+                else
+                {
+                    LogManager.SystemLog.Info("str:" + str);  
+                    toolTipLabState.SetToolTip(toolBar.LabState, str);
+                }
             }));
         }
         /// <summary>
@@ -1504,7 +1796,7 @@ namespace LyncWpfApp
         /// 更具名称获取lync状态
         /// </summary>
         /// <param name="str"></param>
-        void LyncBeginSearch(string str)
+        public void LyncBeginSearch(string str)
         {
             LyncContactManager.BeginSearch(str, SearchProviders.OtherContacts, SearchFields.AllFields, SearchOptions.Default, 10, AsyncCallbackProcess, null);
         }
@@ -1587,6 +1879,8 @@ namespace LyncWpfApp
         /// </summary>
         public void StartSignOutUC()//注销UC
         {
+
+
             LogManager.SystemLog.Debug("Start StartSignOutUC");
             LogInBusiness log = new LogInBusiness();
             log.SignOut();
@@ -1601,6 +1895,7 @@ namespace LyncWpfApp
             }));
             LogManager.SystemLog.Debug("End StartSignOutUC.Invoke");
         }
+
         /// <summary>
         /// 是否UC资源
         /// </summary>
@@ -1965,7 +2260,18 @@ namespace LyncWpfApp
         }
 
         void LyncClientStateChangedMethod(object ob)
-        {            
+        {
+            ////通话时不能更改话机联动状态   2015/7/16
+            ////You can't change joint type in a call
+            //if (winCall != null)
+            //{
+            //    Dispatcher.Invoke(new Action(() =>
+            //    {
+            //        DialogShow.Show(StringHelper.FindLanguageResource("Cannotdothisincall"), StringHelper.FindLanguageResource("error"), 2);
+            //        return;
+            //    }));
+            //}
+
             if (lockLyncUCLoginOut.TryEnterWriteLock(-1))
             {
                 try
@@ -1993,6 +2299,7 @@ namespace LyncWpfApp
                         }
                         LogInBusiness log = new LogInBusiness();
                         log.SignOut();//lync 注销时 注销UC
+
                     }
                     if (e.NewState == ClientState.SignedIn)//登录成功 开始订阅自身状态 
                     {
@@ -2010,6 +2317,12 @@ namespace LyncWpfApp
                         foundContactSubscription.Subscribe(ContactSubscriptionRefreshRate.High, subscribeTypeList);
 
                         LyncSignedInFun();
+                        //2015/8/14  登录时根据Lync状态获取UC状态 
+                        GetLyncUserState();
+                        GetUCState(userState);
+                        LogInBusiness log = new LogInBusiness();
+                        log.PubSelfStatus((int)userState, new StringBuilder());
+                       
                     }
                     LogManager.SystemLog.Debug(string.Format("SingletonObj.LoginInfo = {0}", SingletonObj.LoginInfo));
                     LogManager.SystemLog.Debug(string.Format("Leave LyncClientStateChanged.NewState = {0}", e.NewState));
@@ -2019,7 +2332,7 @@ namespace LyncWpfApp
                     lockLyncUCLoginOut.ExitWriteLock();
                 }
             }
-          
+
         }
         /// <summary>
         /// lync状态改变
@@ -2027,13 +2340,13 @@ namespace LyncWpfApp
         /// <param name="sender"></param>
         /// <param name="e"></param>
         void LyncClientStateChanged(object sender, ClientStateChangedEventArgs e)
-        {           
-            threadLyncClientStateChanged = new Thread(new ParameterizedThreadStart(LyncClientStateChangedMethod));            
+        {
+            threadLyncClientStateChanged = new Thread(new ParameterizedThreadStart(LyncClientStateChangedMethod));
             threadLyncClientStateChanged.Priority = ThreadPriority.AboveNormal;
-           // threadLyncClientStateChanged.IsBackground = true;
+            // threadLyncClientStateChanged.IsBackground = true;
             threadLyncClientStateChanged.Start(e);
-           
         }
+
         /// <summary>
         /// lync登录成功回调函数
         /// </summary>

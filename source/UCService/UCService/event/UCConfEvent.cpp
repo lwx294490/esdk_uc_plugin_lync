@@ -76,11 +76,22 @@ bool UCConfEvent::DoHandle(void)
 				{
 					item.memType = UC_ACCOUNT;
 					strcpy_s(item.ucAcc,STRING_LENGTH,targetUserInfo.account);
+
+					if (!UCConfMgr::Instance().IsChairman())
+					{
+						/////非主席状况下执行该操作
+						UCConfMgr::Instance().AddUCMeminConf(targetUserInfo.account,targetUserInfo.bindNO);
+					}
 				}
 				else
 				{	
 					item.memType = UC_IPPHONE;
 					strcpy_s(item.ucAcc,STRING_LENGTH,pMem[i].acAttendeeNumber);
+					if (!UCConfMgr::Instance().IsChairman())
+					{
+						/////非主席状况下执行该操作
+						UCConfMgr::Instance().AddPhoneMeminConf(pMem[i].acAttendeeNumber);
+					}
 				}
 				if(pMem[i].enState == CALL_E_CONF_ATTENDEE_INVITING)
 				{	
@@ -109,6 +120,11 @@ bool UCConfEvent::DoHandle(void)
 						else
 						{
 							item.memStatus = CONF_MEM_DEL;
+							if (UCConfMgr::Instance().IsUCMemberInconf(item.ucAcc)&&(!UCConfMgr::Instance().IsChairman()))
+							{
+								/////非主席状况下执行该操作
+								UCConfMgr::Instance().DelUCMeminConf(item.ucAcc);
+							}
 						}
 
 					}
@@ -121,6 +137,11 @@ bool UCConfEvent::DoHandle(void)
 						else
 						{
 							item.memStatus = CONF_MEM_DEL;
+							if (UCConfMgr::Instance().IsPhoneMemberInconf(item.ucAcc)&&(!UCConfMgr::Instance().IsChairman()))
+							{
+								/////非主席状况下执行该操作
+								UCConfMgr::Instance().DelPhoneMeminConf(item.ucAcc);
+							}
 						}
 					}
 				}

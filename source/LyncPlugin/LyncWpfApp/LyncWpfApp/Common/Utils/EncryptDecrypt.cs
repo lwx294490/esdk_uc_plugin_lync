@@ -43,7 +43,7 @@ namespace LyncWpfApp
             fsEncrypted.Close();
         }
 
-        static void DecryptFile(string sInputFilename,
+           static void DecryptFile(string sInputFilename,
            string sOutputFilename,
            string sKey)
         {

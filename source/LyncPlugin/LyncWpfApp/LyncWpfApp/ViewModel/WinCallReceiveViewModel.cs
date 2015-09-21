@@ -7,6 +7,7 @@ using System.Windows;
 using Microsoft.Lync.Model;
 using Microsoft.Lync.Model.Group;
 
+
 namespace LyncWpfApp
 {
     public class WinCallReceiveViewModel
@@ -28,9 +29,20 @@ namespace LyncWpfApp
         }
         private void FinishCommandProcess()
         {
-            if ("" == winCallReceive.txtOtherPhone.Text)
+            //2015/7/27   为空和数字校验
+            if ("" == winCallReceive.txtOtherPhone.Text.Trim())
             {
                 DialogShow.Show(StringHelper.FindLanguageResource("PhoneNumberNullError"), StringHelper.FindLanguageResource("error"), 2);
+                return;
+            }
+            if (IsValidPhoneNumber(winCallReceive.txtOtherPhone.Text)==false)
+            {
+                DialogShow.Show(StringHelper.FindLanguageResource("Invalidnum"), StringHelper.FindLanguageResource("error"), 2);
+                return;
+            }
+            if (winCallReceive.UcPhoneNo == winCallReceive.txtOtherPhone.Text || winCallReceive.UcPhoneNo1 == winCallReceive.txtOtherPhone.Text)
+            {
+                DialogShow.Show(StringHelper.FindLanguageResource("Cannottansfer"), StringHelper.FindLanguageResource("error"), 2);
                 return;
             }
             MakeCallBusiness bus = new MakeCallBusiness();
@@ -49,6 +61,7 @@ namespace LyncWpfApp
                 winCallReceive.isCloseButton = false;
                 isAnswerMessage = false;
                 winCallReceive.Close();
+                //winCallReceive.lync.isHave = false;
                 if (winCallReceive.lync.timer == null || !winCallReceive.lync.timer.Enabled)
                 {
                     WinCall call;
@@ -95,7 +108,7 @@ namespace LyncWpfApp
             isAnswerMessage = false;
             if (!isVideo)
             {
-                callBusiness.RejectCall();
+                callBusiness.RejectCall();  //超时不做这个动作，只关界面   2015/7/28
             }
             else
             {
@@ -103,9 +116,23 @@ namespace LyncWpfApp
                 bus.RejectVideoCall();
             }
             winCallReceive.isCloseButton = false;
+
+            //7/27 
+            winCallReceive.lync.setBtn();   //先设置图形
+            //if (winCallReceive.lync.toolBar.JointType == PhoneJointType.PC_Device)
+            //{
+            //    if (winCallReceive.lync.winCall.btnVideo.IsEnabled == false)
+            //    {
+            //        winCallReceive.lync.winCall.btnVideo.IsEnabled = true;
+            //        UpdateImage.UpdateData(winCallReceive.lync.winCall.imgVideo, "/Image/call/video_1.png");
+            //    }                
+                                         
+            //}
+
             if (winCallReceive.Visibility == Visibility.Visible )
             {
                 winCallReceive.Close();
+                winCallReceive.lync.isHave = false;
             }         
             string name = StringHelper.GetSubString(winCallReceive.callName);
             string url = StringHelper.GetLyncUrl(name);
@@ -113,5 +140,37 @@ namespace LyncWpfApp
             HistoryQueryBusiness query = new HistoryQueryBusiness();
             query.InsertCallHistory(CallHistoryType.HISTORY_CALL_MISSED, url, name, -1);
         }
+
+      
+
+        /// <summary>
+        /// 校验是否为纯数字
+        /// werther the number is right or not 
+        /// </summary>
+        /// <param name="dialContent"></param>
+        public bool IsValidPhoneNumber(string phoneNumber)
+        {
+            if (string.IsNullOrEmpty(phoneNumber))
+            {
+                return false;
+            }
+
+            phoneNumber = phoneNumber.Trim();
+
+            foreach (char ch in phoneNumber)
+            {
+                if ((ch >= '0' && ch <= '9') || ch == '*' || ch == '#')
+                {
+                    continue;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
     }
 }

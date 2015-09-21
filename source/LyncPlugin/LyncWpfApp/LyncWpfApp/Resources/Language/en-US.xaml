@@ -56,6 +56,7 @@ xmlns:sys="clr-namespace:System;assembly=mscorlib">
   
     <sys:String x:Key="Chinese">简体中文</sys:String>
     <sys:String x:Key="English">English</sys:String>
+    <sys:String x:Key="BR">Portuguese</sys:String>
     <sys:String x:Key="ReStart">Start UC for Microsoft Lync when my computer start</sys:String>
     <sys:String x:Key="Microphone">:Microphone</sys:String>
     <sys:String x:Key="Speaker">:Speaker</sys:String>
@@ -114,7 +115,7 @@ xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <sys:String x:Key="IPPhone">Phone as the primary</sys:String>
     <sys:String x:Key="Finish">Finish</sys:String>
     <sys:String x:Key="transfernNumber">Transfer To New Number</sys:String>
-    <sys:String x:Key="TwoCallsSameTime">you cannot have two calls at the same time</sys:String>
+    <sys:String x:Key="TwoCallsSameTime">You cannot have two calls at the same time</sys:String>
 
     <sys:String x:Key="SelfMgr_Portal">Self Manager Paltform</sys:String>
     <sys:String x:Key="BookConf_Portal">Book Conference</sys:String>
@@ -152,7 +153,7 @@ xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <sys:String x:Key="CallForwardOnDND">Call Forward On DND</sys:String>
 
     <sys:String x:Key="FWDSuccess">Call Forwarding Success</sys:String>
-    <sys:String x:Key="FWDFailed">Call Forwarding  Failed</sys:String>
+    <sys:String x:Key="FWDFailed">Call Forwarding Failed</sys:String>
 
     <sys:String x:Key="CancelFWDSuccess">Cancel Call Forwarding Success</sys:String>
     <sys:String x:Key="CancelFWDFailed">Cancel Call Forwarding  Failed</sys:String>
@@ -183,11 +184,24 @@ xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <sys:String x:Key="startContextCallFailed">StartContextCall Failed</sys:String>
     <sys:String x:Key="PleaseLoginUCagain">Please Login UC again</sys:String>
     <sys:String x:Key="somanypeople">20 Mems is max</sys:String>
-    <sys:String x:Key="theconferencehassameperson">The conference has same person</sys:String>
+    <sys:String x:Key="theconferencehassameperson"> is exist already</sys:String>
     <sys:String x:Key="NoSuchUCAccount">No Such UC Account</sys:String>
-    <sys:String x:Key="youareincallalready">Can not make different calls in one time</sys:String>
-    <sys:String x:Key="ConAnswer">Conference Answer</sys:String>
-    
+    <sys:String x:Key="Youareincallalready">Can not make different calls in one time</sys:String>
+    <sys:String x:Key="ConAnswer">Answer</sys:String>
+    <sys:String x:Key="Cannotdothisincall">You can't change joint type in a call</sys:String>
+    <sys:String x:Key="CannotchangeFWDincall">You can't change Forword type in a call</sys:String>
+    <sys:String x:Key="Cannotchangemailincall">You can't change Mail type in a call</sys:String>
+    <sys:String x:Key="Invalidnum">The num is invalid</sys:String>
+    <sys:String x:Key="PleaseAddOneAccountFirst">Please add one account first</sys:String>
+    <sys:String x:Key="Cannottansfer">Can not tansfer to this number</sys:String>
+    <sys:String x:Key="StatusOffline">The Ipphone is offline</sys:String>
+    <sys:String x:Key="Statusonline">The Ipphone is online</sys:String>
+    <sys:String x:Key="NoVoicemail">The Voice mail  is null</sys:String>
+    <sys:String x:Key="Success">Success</sys:String>
+    <sys:String x:Key="MailNumberNullError">Mail Number is Null</sys:String>
+    <sys:String x:Key="Cannottransfer">You have set no conditional transfer already</sys:String>
+    <sys:String x:Key="theNumisExist">The number is exist</sys:String>
+    <sys:String x:Key="theNameisExist">The account is exist</sys:String>
     <!--add by jinyeqing-->
 
     <sys:String x:Key="BlindTransCall">Call Transfer</sys:String>
