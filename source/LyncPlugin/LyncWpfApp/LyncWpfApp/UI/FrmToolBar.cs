@@ -822,7 +822,7 @@ namespace LyncWpfApp
                 }
                 else
                 {
-                    btnMail.Image = Image.FromFile(str.Substring(0, str.IndexOf("bin")) + "\\Image\\sms.png");
+                    btnMail.Image = Image.FromFile(str.Substring(0, str.IndexOf("bin")) + "\\Image\\sms_1.png");
                 }
             }
             catch (System.Exception ex)
