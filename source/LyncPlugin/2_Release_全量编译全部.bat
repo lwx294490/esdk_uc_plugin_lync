@@ -11,6 +11,18 @@ xcopy /Y ..\UCService\output\release\UCService.pdb 	.\LyncWpfApp\LyncWpfApp\bin\
 xcopy /Y /S ..\UCService\output\release\* 			.\LyncWpfApp\LyncWpfApp\bin\
 echo －－－－－ 5-2拷贝 UCService Release版本成功－－－－－－－－－－－－
 
+echo －－－－－ 5-2-1拷贝Lync dll版本 －－－－－－－－－－－－－
+xcopy /Y .\..\..\LyncSDK\Microsoft.Lync.Controls.dll   	   .\LyncWpfApp\LyncWpfApp\bin\
+xcopy /Y .\..\..\LyncSDK\Microsoft.Lync.Controls.Framework.dll   	   .\LyncWpfApp\LyncWpfApp\bin\
+xcopy /Y .\..\..\LyncSDK\Microsoft.Lync.Model.dll   	   .\LyncWpfApp\LyncWpfApp\bin\
+xcopy /Y .\..\..\LyncSDK\Microsoft.Lync.Utilities.dll   	   .\LyncWpfApp\LyncWpfApp\bin\
+xcopy /Y .\..\..\LyncSDK\Microsoft.Office.Uc.dll   	   .\LyncWpfApp\LyncWpfApp\bin\
+xcopy /Y .\..\..\LyncSDK\Microsoft.Lync.Controls.dll   	   .\LyncWpfApp\LyncWpfApp\Reference\
+xcopy /Y .\..\..\LyncSDK\Microsoft.Lync.Controls.Framework.dll   	  .\LyncWpfApp\LyncWpfApp\Reference\
+xcopy /Y .\..\..\LyncSDK\Microsoft.Lync.Model.dll   	   .\LyncWpfApp\LyncWpfApp\Reference\
+xcopy /Y .\..\..\LyncSDK\Microsoft.Lync.Utilities.dll   	   .\LyncWpfApp\LyncWpfApp\Reference\
+echo －－－－－ 5-2-1拷贝Lync dll版本成功－－－－－－－－－－－－
+
 echo.
 echo －－－－－ 5-3编译 WpfSendMessage Release版本 －－－－－－－－－－
 @"%VS100COMNTOOLS%\..\IDE\devenv.com" .\WpfSendMessage\WpfSendMessage.sln /Rebuild "Release"
